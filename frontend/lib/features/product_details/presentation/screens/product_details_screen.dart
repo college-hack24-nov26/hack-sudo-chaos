@@ -224,11 +224,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                   AiExplanationCard(
                     aiExplanation: details.aiExplanation,
                     onNavigateToFullExplanation: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('AI Food Explanation screen integration point prepared.'),
-                        ),
-                      );
+                      context.push('/product/${details.product.barcode}/ai-explanation');
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),

@@ -143,3 +143,4 @@ class IngredientProductSummaryCard extends StatelessWidget {
     );
   }
 }
+

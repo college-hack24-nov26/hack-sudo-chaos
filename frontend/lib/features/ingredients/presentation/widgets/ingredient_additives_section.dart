@@ -187,3 +187,4 @@ class IngredientAdditivesSection extends StatelessWidget {
     );
   }
 }
+

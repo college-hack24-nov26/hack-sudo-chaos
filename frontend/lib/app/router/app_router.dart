@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import '../../features/ai_explanation/presentation/screens/ai_explanation_placeholder_screen.dart';
+import '../../features/ai_explanation/presentation/screens/ai_food_explanation_screen.dart';
 import '../../features/comparison/presentation/screens/product_comparison_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/ingredients/presentation/screens/ingredient_details_screen.dart';
@@ -84,7 +84,17 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.aiExplanation,
-      builder: (context, state) => const AiExplanationPlaceholderScreen(),
+      builder: (context, state) {
+        final barcode = state.uri.queryParameters['barcode'] ?? '';
+        return AiFoodExplanationScreen(barcode: barcode);
+      },
+    ),
+    GoRoute(
+      path: '/product/:barcode/ai-explanation',
+      builder: (context, state) {
+        final barcode = state.pathParameters['barcode'] ?? '';
+        return AiFoodExplanationScreen(barcode: barcode);
+      },
     ),
   ],
 );

@@ -166,3 +166,4 @@ class IngredientIntelligenceHelper {
     }
   }
 }
+

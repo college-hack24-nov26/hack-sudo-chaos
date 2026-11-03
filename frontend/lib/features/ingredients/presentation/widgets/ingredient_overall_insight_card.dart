@@ -100,3 +100,4 @@ class IngredientOverallInsightCard extends StatelessWidget {
     );
   }
 }
+

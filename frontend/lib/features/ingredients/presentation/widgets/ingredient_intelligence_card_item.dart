@@ -125,3 +125,4 @@ class IngredientIntelligenceCardItem extends StatelessWidget {
     );
   }
 }
+
