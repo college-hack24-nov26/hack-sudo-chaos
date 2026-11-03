@@ -1,11 +1,11 @@
 import 'package:go_router/go_router.dart';
 import '../../features/ai_explanation/presentation/screens/ai_explanation_placeholder_screen.dart';
-import '../../features/comparison/presentation/screens/comparison_placeholder_screen.dart';
+import '../../features/comparison/presentation/screens/product_comparison_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/ingredients/presentation/screens/ingredients_placeholder_screen.dart';
 import '../../features/product_details/presentation/screens/product_details_screen.dart';
-import '../../features/saved/presentation/screens/saved_placeholder_screen.dart';
-import '../../features/scanner/presentation/screens/scanner_placeholder_screen.dart';
+import '../../features/saved/presentation/screens/saved_products_screen.dart';
+import '../../features/scanner/presentation/screens/scanner_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 
 class AppRoutes {
@@ -16,6 +16,7 @@ class AppRoutes {
   static const String scanner = '/scanner';
   static const String saved = '/saved';
   static const String comparison = '/comparison';
+  static const String compare = '/compare';
   static const String ingredients = '/ingredients';
   static const String aiExplanation = '/ai-explanation';
 }
@@ -47,15 +48,25 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.scanner,
-      builder: (context, state) => const ScannerPlaceholderScreen(),
+      builder: (context, state) => const ScannerScreen(),
     ),
     GoRoute(
       path: AppRoutes.saved,
-      builder: (context, state) => const SavedPlaceholderScreen(),
+      builder: (context, state) => const SavedProductsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.compare,
+      redirect: (context, state) {
+        final q = state.uri.query;
+        return q.isEmpty ? AppRoutes.comparison : '${AppRoutes.comparison}?$q';
+      },
     ),
     GoRoute(
       path: AppRoutes.comparison,
-      builder: (context, state) => const ComparisonPlaceholderScreen(),
+      builder: (context, state) => ProductComparisonScreen(
+        initialProductABarcode: state.uri.queryParameters['productA'],
+        initialProductBBarcode: state.uri.queryParameters['productB'],
+      ),
     ),
     GoRoute(
       path: AppRoutes.ingredients,

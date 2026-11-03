@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../shared/widgets/yumsure_app_bar.dart';
@@ -244,11 +245,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                 // Section 10: Product Comparison Action Banner
                 CompareBannerCard(
                   onCompare: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Product Comparison screen integration point prepared.'),
-                      ),
-                    );
+                    context.push('/compare?productA=${details.product.barcode}');
                   },
                 ),
                 const SizedBox(height: AppSpacing.xxxl),
