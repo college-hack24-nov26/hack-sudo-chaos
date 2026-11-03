@@ -40,6 +40,7 @@ BARCODE_REGEX = re.compile(r"^[0-9A-Za-z]{8,14}$")
 )
 async def get_product_by_barcode(
     barcode: str,
+    include_ai_explanation: bool = True,
     service: ProductService = Depends(get_product_service),
 ) -> ProductAnalysisResponse:
     """
@@ -58,7 +59,10 @@ async def get_product_by_barcode(
         )
 
     try:
-        analysis = await service.analyze_product_by_barcode_async(clean_barcode)
+        analysis = await service.analyze_product_by_barcode_async(
+            clean_barcode,
+            include_ai_explanation=include_ai_explanation,
+        )
         if not analysis:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

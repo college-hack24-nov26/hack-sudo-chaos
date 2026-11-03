@@ -33,6 +33,7 @@ from app.schemas.product_analysis import (
     EnginePerformanceMetrics,
     ProductAnalysisResponse,
 )
+from app.schemas.frontend_adapter import build_frontend_sections
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,7 @@ class ProductService:
         self,
         barcode: str,
         extra_claims: Optional[List[DeclaredClaimInput]] = None,
+        include_ai_explanation: bool = True,
     ) -> Optional[ProductAnalysisResponse]:
         """
         Asynchronous product analysis with Open Food Facts fallback:
@@ -231,6 +233,16 @@ class ProductService:
             total_analysis_ms=round(total_ms, 3),
         )
 
+        # Step 4: Assemble Frontend Section Models for Flutter UI
+        fe_sections = build_frontend_sections(
+            domain_product=domain_product,
+            nutrition_eval=coord_result.nutrition_evaluation,
+            icmr_eval=coord_result.icmr_hfss_evaluation,
+            claims_eval=coord_result.claims_evaluation,
+            ingredient_eval=coord_result.ingredient_evaluation,
+            include_ai_explanation=include_ai_explanation,
+        )
+
         return ProductAnalysisResponse(
             product=summary,
             nutrition_evaluation=coord_result.nutrition_evaluation,
@@ -238,12 +250,18 @@ class ProductService:
             claims_evaluation=coord_result.claims_evaluation,
             ingredient_evaluation=coord_result.ingredient_evaluation,
             metrics=metrics,
+            nutritional_interpretation=fe_sections["nutritional_interpretation"],
+            regulatory_claims_validation=fe_sections["regulatory_claims_validation"],
+            ingredient_analysis=fe_sections["ingredient_analysis"],
+            key_findings=fe_sections["key_findings"],
+            ai_explanation=fe_sections["ai_explanation"],
         )
 
     def analyze_product_by_barcode(
         self,
         barcode: str,
         extra_claims: Optional[List[DeclaredClaimInput]] = None,
+        include_ai_explanation: bool = True,
     ) -> Optional[ProductAnalysisResponse]:
         """
         Synchronous variant of analyze_product_by_barcode.
@@ -334,6 +352,16 @@ class ProductService:
             total_analysis_ms=round(total_ms, 3),
         )
 
+        # Step 4: Assemble Frontend Section Models for Flutter UI
+        fe_sections = build_frontend_sections(
+            domain_product=domain_product,
+            nutrition_eval=coord_result.nutrition_evaluation,
+            icmr_eval=coord_result.icmr_hfss_evaluation,
+            claims_eval=coord_result.claims_evaluation,
+            ingredient_eval=coord_result.ingredient_evaluation,
+            include_ai_explanation=include_ai_explanation,
+        )
+
         return ProductAnalysisResponse(
             product=summary,
             nutrition_evaluation=coord_result.nutrition_evaluation,
@@ -341,4 +369,9 @@ class ProductService:
             claims_evaluation=coord_result.claims_evaluation,
             ingredient_evaluation=coord_result.ingredient_evaluation,
             metrics=metrics,
+            nutritional_interpretation=fe_sections["nutritional_interpretation"],
+            regulatory_claims_validation=fe_sections["regulatory_claims_validation"],
+            ingredient_analysis=fe_sections["ingredient_analysis"],
+            key_findings=fe_sections["key_findings"],
+            ai_explanation=fe_sections["ai_explanation"],
         )

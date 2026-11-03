@@ -11,6 +11,13 @@ from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
 
 from app.domain.engines.contracts import EngineBatchResult
+from app.schemas.frontend_adapter import (
+    NutritionalInterpretationModel,
+    RegulatoryClaimsValidationModel,
+    IngredientAnalysisModel,
+    KeyFindingItemModel,
+    AiExplanationModel,
+)
 
 
 class ProductSummaryResponse(BaseModel):
@@ -26,7 +33,10 @@ class ProductSummaryResponse(BaseModel):
     serving_size_value: Optional[Decimal] = None
     serving_size_unit: str = "g"
     is_verified: bool = False
+    is_veg: Optional[bool] = None
     source_id: Optional[str] = None
+    source_provenance: Optional[str] = None
+    source_retrieval_date: Optional[str] = None
     nutrient_count: int = 0
     ingredient_count: int = 0
     is_persisted: bool = True
@@ -56,3 +66,10 @@ class ProductAnalysisResponse(BaseModel):
     ingredient_evaluation: EngineBatchResult
     metrics: EnginePerformanceMetrics
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    # Flutter Client UI Section Models
+    nutritional_interpretation: Optional[NutritionalInterpretationModel] = None
+    regulatory_claims_validation: Optional[RegulatoryClaimsValidationModel] = None
+    ingredient_analysis: Optional[IngredientAnalysisModel] = None
+    key_findings: List[KeyFindingItemModel] = Field(default_factory=list)
+    ai_explanation: Optional[AiExplanationModel] = None
