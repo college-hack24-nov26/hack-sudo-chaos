@@ -126,3 +126,4 @@ class _AiBottomInputBarState extends State<AiBottomInputBar> {
     );
   }
 }
+

@@ -106,3 +106,4 @@ class AiExplanationTopAppBar extends StatelessWidget {
     );
   }
 }
+

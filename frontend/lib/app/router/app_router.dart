@@ -5,6 +5,8 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/ingredients/presentation/screens/ingredient_details_screen.dart';
 import '../../features/product_details/presentation/screens/product_details_screen.dart';
 import '../../features/saved/presentation/screens/saved_products_screen.dart';
+import '../../features/scanner/presentation/screens/product_loading_screen.dart';
+import '../../features/scanner/presentation/screens/product_not_found_screen.dart';
 import '../../features/scanner/presentation/screens/scanner_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 
@@ -19,6 +21,8 @@ class AppRoutes {
   static const String compare = '/compare';
   static const String ingredients = '/ingredients';
   static const String aiExplanation = '/ai-explanation';
+  static const String productLoading = '/product-loading/:barcode';
+  static const String productNotFound = '/product-not-found/:barcode';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -94,6 +98,20 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final barcode = state.pathParameters['barcode'] ?? '';
         return AiFoodExplanationScreen(barcode: barcode);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.productLoading,
+      builder: (context, state) {
+        final barcode = state.pathParameters['barcode'] ?? '';
+        return ProductLoadingScreen(barcode: barcode);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.productNotFound,
+      builder: (context, state) {
+        final barcode = state.pathParameters['barcode'] ?? '';
+        return ProductNotFoundScreen(barcode: barcode);
       },
     ),
   ],

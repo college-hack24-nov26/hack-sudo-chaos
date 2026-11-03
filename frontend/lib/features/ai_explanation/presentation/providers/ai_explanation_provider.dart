@@ -71,3 +71,4 @@ final aiChatMessagesProvider =
     StateNotifierProvider<AiChatNotifier, List<AiChatMessage>>((ref) {
   return AiChatNotifier();
 });
+

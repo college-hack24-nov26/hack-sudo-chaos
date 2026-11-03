@@ -252,3 +252,4 @@ class _BadgeInfo {
 
   const _BadgeInfo({required this.label, required this.severity});
 }
+
