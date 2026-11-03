@@ -74,12 +74,17 @@ class NutrientObservationInput(BaseModel):
     """
     Standardized observation of a single declared nutrient.
     Missing values are NEVER converted to zero.
+    Explicitly carries the statutory measurement basis (PER_100G, PER_100ML, or PER_SERVING).
     """
     nutrient_code: str = Field(..., description="Canonical nutrient slug (e.g. 'protein', 'sodium')")
     per_100g_value: Optional[Decimal] = Field(None, description="Numeric value per 100g or 100ml")
     per_serving_value: Optional[Decimal] = Field(None, description="Numeric value per serving")
     unit: str = Field(..., description="Measurement unit (e.g. 'g', 'mg', 'kcal')")
     data_status: NutrientDataStatus = Field(..., description="Four-state declaration status from label")
+    measurement_basis: MeasurementBasis = Field(
+        default=MeasurementBasis.PER_100G,
+        description="Explicit statutory measurement basis: PER_100G, PER_100ML, or PER_SERVING"
+    )
 
 
 class IngredientObservationInput(BaseModel):

@@ -17,9 +17,11 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from urllib.parse import urlsplit
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.db.session import engine
+from app.core.config import settings, mask_connection_url
 from app.models import (
     Product, Nutrient, ProductNutrient,
     Ingredient, ProductIngredient, DataSource
@@ -29,23 +31,51 @@ from app.repositories.product_repository import ProductRepository
 
 class TestProductRepository(unittest.TestCase):
     """
-    Tests ProductRepository using transactional test isolation.
-    All inserted test fixtures are rolled back in tearDown().
+    Tests ProductRepository using transactional test isolation against TEST_DATABASE_URL.
+    Integration tests strictly refuse to run against DATABASE_URL or Supabase development databases.
     """
 
     @classmethod
     def setUpClass(cls):
-        # Open a dedicated connection for testing
+        test_url = settings.TEST_DATABASE_URL
+        if not test_url:
+            raise unittest.SkipTest(
+                "TEST_DATABASE_URL is not configured in backend/.env. "
+                "Integration tests skipped to prevent accidental execution against development database."
+            )
+
+        # 1. Strictly forbid cloud / Supabase test targets
+        if "supabase.co" in test_url or "supabase.com" in test_url:
+            raise unittest.SkipTest(
+                f"TEST_DATABASE_URL ({mask_connection_url(test_url)}) points to a Supabase host. "
+                "Integration tests are strictly prohibited on shared cloud instances."
+            )
+
+        # 2. Validate database name contains 'test'
+        parsed = urlsplit(test_url)
+        db_name = parsed.path.lstrip("/").lower()
+        if "test" not in db_name:
+            raise unittest.SkipTest(
+                f"TEST_DATABASE_URL target database '{db_name}' does not contain 'test'. "
+                "Target database must be an explicitly named test database (e.g. yumsure_test)."
+            )
+
+        # 3. Create isolated test engine
         try:
-            cls.connection = engine.connect()
+            cls.test_engine = create_engine(test_url, pool_pre_ping=True)
+            cls.connection = cls.test_engine.connect()
         except Exception as e:
-            raise unittest.SkipTest(f'Live PostgreSQL database not reachable: {e}')
+            masked = mask_connection_url(test_url)
+            raise unittest.SkipTest(
+                f"Isolated test database ({masked}) is unreachable or uninitialized: {e}"
+            )
 
     @classmethod
     def tearDownClass(cls):
-        # Close connection
         if hasattr(cls, 'connection') and cls.connection:
             cls.connection.close()
+        if hasattr(cls, 'test_engine') and cls.test_engine:
+            cls.test_engine.dispose()
 
     def setUp(self):
         # Begin an atomic transaction for each test

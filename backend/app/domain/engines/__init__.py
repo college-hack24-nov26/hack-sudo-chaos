@@ -28,6 +28,11 @@ from app.domain.engines.nutrition_engine import evaluate_nutrition
 from app.domain.engines.claims_engine import evaluate_claims
 from app.domain.engines.icmr_hfss_engine import evaluate_icmr_hfss
 from app.domain.engines.ingredient_engine import evaluate_ingredients
+from app.domain.engines.coordinator import (
+    EvaluationRulesBundle,
+    EvaluationCoordinator,
+    EvaluationCoordinatorResult,
+)
 
 __all__ = [
     "FoodForm",
@@ -42,6 +47,9 @@ __all__ = [
     "ProductEvaluationInput",
     "RuleEvaluationResult",
     "EngineBatchResult",
+    "EvaluationRulesBundle",
+    "EvaluationCoordinator",
+    "EvaluationCoordinatorResult",
     "evaluate_nutrition",
     "evaluate_claims",
     "evaluate_icmr_hfss",
