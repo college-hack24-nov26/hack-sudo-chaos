@@ -7,7 +7,7 @@ Mounts versioned API endpoints, configures CORS, and establishes centralized err
 
 import logging
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -94,6 +94,22 @@ async def health_check():
             "message": db_msg,
         },
     }
+
+
+# Documentation Convenience Redirects
+@app.get("/docs", include_in_schema=False)
+async def redirect_docs():
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redirect_redoc():
+    return RedirectResponse(url=f"{settings.API_V1_STR}/redoc")
+
+
+@app.get("/openapi.json", include_in_schema=False)
+async def redirect_openapi():
+    return RedirectResponse(url=f"{settings.API_V1_STR}/openapi.json")
 
 
 # Mount Versioned API Router

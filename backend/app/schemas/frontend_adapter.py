@@ -446,3 +446,4 @@ def build_frontend_sections(
         "key_findings": key_findings,
         "ai_explanation": ai_explanation,
     }
+

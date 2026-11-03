@@ -193,3 +193,4 @@ def get_trending_products() -> TrendingResponseSchema:
             )
         )
     return TrendingResponseSchema(items=items)
+

@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
-# Coordinator DTOs
+# Coordinator DTOs (Proposed for future unification into contracts.py)
 # -----------------------------------------------------------------------------
 
 class EvaluationRulesBundle(BaseModel):
@@ -221,7 +221,7 @@ class EvaluationCoordinator:
         Initialize coordinator with regulatory rules bundle and optional injected runners.
         """
         if rules_bundle is None:
-            self.rules_bundle = EvaluationRulesBundle.from_seed_files()
+            self.rules_bundle = EvaluationRulesBundle()
         elif isinstance(rules_bundle, dict):
             self.rules_bundle = EvaluationRulesBundle(**rules_bundle)
         elif isinstance(rules_bundle, EvaluationRulesBundle):
@@ -241,7 +241,7 @@ class EvaluationCoordinator:
     def get_default(cls) -> "EvaluationCoordinator":
         """Singleton accessor for default EvaluationCoordinator with preloaded rules."""
         if cls._default_instance is None:
-            cls._default_instance = cls()
+            cls._default_instance = cls(rules_bundle=EvaluationRulesBundle.from_seed_files())
         return cls._default_instance
 
     def evaluate(self, product: ProductEvaluationInput) -> CoordinatorEvaluationResult:

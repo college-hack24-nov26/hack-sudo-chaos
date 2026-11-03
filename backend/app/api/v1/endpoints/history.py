@@ -114,3 +114,4 @@ def get_scan_insights(
         finding_type="high_sugar",
         timeframe=timeframe,
     )
+

@@ -34,6 +34,7 @@ from app.schemas.product_analysis import (
     ProductAnalysisResponse,
 )
 from app.schemas.frontend_adapter import build_frontend_sections
+from app.domain.curated_catalog import get_curated_product, get_curated_image_url
 
 logger = logging.getLogger(__name__)
 
@@ -60,14 +61,44 @@ class ProductService:
     def get_product_by_barcode(self, barcode: str) -> Optional[Product]:
         """
         Retrieves ORM Product entity with all relationships eagerly loaded (eliminating N+1).
+        Gracefully handles database connectivity / unmigrated table failures.
         """
-        return self.repository.get_by_barcode(barcode, load_relationships=True)
+        try:
+            return self.repository.get_by_barcode(barcode, load_relationships=True)
+        except Exception as err:
+            logger.warning(
+                "Local database lookup failed for barcode %s (e.g. unmigrated DB or connection issue): %s",
+                barcode,
+                err,
+            )
+            session = getattr(self.repository, "session", None)
+            if session:
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+            return None
 
     def get_product_by_id(self, product_id: Union[uuid.UUID, str]) -> Optional[Product]:
         """
         Retrieves ORM Product entity by UUID primary key.
+        Gracefully handles database connectivity / unmigrated table failures.
         """
-        return self.repository.get_by_id(product_id, load_relationships=True)
+        try:
+            return self.repository.get_by_id(product_id, load_relationships=True)
+        except Exception as err:
+            logger.warning(
+                "Local database lookup failed for product_id %s (e.g. unmigrated DB or connection issue): %s",
+                product_id,
+                err,
+            )
+            session = getattr(self.repository, "session", None)
+            if session:
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+            return None
 
     def get_domain_product_by_barcode(
         self,
@@ -177,26 +208,36 @@ class ProductService:
 
             if not off_resp.is_found:
                 logger.info("Open Food Facts lookup failed or product not found for barcode %s: %s", barcode, off_resp.status)
-                return None
+                # Fallback to curated demonstration catalog if available
+                curated = get_curated_product(barcode)
+                if curated:
+                    logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
+                    domain_product = curated
+                    is_verified = True
+                    is_persisted = False
+                    map_ms = 0.0
+                    image_url = get_curated_image_url(barcode)
+                else:
+                    return None
+            else:
+                # Normalize external response into domain DTO
+                t_map_start = time.perf_counter()
+                domain_product = ExternalProductNormalizer.to_domain_dto(
+                    barcode=barcode,
+                    raw_product=off_resp.product_data,
+                    raw_payload=off_resp.raw_payload
+                )
+                map_ms = (time.perf_counter() - t_map_start) * 1000.0
 
-            # Normalize external response into domain DTO
-            t_map_start = time.perf_counter()
-            domain_product = ExternalProductNormalizer.to_domain_dto(
-                barcode=barcode,
-                raw_product=off_resp.product_data,
-                raw_payload=off_resp.raw_payload
-            )
-            map_ms = (time.perf_counter() - t_map_start) * 1000.0
+                image_url = off_resp.product_data.get("image_front_url") or off_resp.product_data.get("image_url")
+                is_verified = False
 
-            image_url = off_resp.product_data.get("image_front_url") or off_resp.product_data.get("image_url")
-            is_verified = False
-
-            # Safe Persistence attempt
-            is_persisted = self._safe_persist_external_product(
-                barcode=barcode,
-                raw_product=off_resp.product_data,
-                raw_payload=off_resp.raw_payload
-            )
+                # Safe Persistence attempt
+                is_persisted = self._safe_persist_external_product(
+                    barcode=barcode,
+                    raw_product=off_resp.product_data,
+                    raw_payload=off_resp.raw_payload
+                )
 
         # Step 2: Multi-Engine Evaluation via EvaluationCoordinator
         coord_result: EvaluationCoordinatorResult = self.coordinator.evaluate(domain_product)
@@ -298,25 +339,35 @@ class ProductService:
 
             if not off_resp.is_found:
                 logger.info("Open Food Facts lookup failed or product not found for barcode %s", barcode)
-                return None
+                # Fallback to curated demonstration catalog if available
+                curated = get_curated_product(barcode)
+                if curated:
+                    logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
+                    domain_product = curated
+                    is_verified = True
+                    is_persisted = False
+                    map_ms = 0.0
+                    image_url = get_curated_image_url(barcode)
+                else:
+                    return None
+            else:
+                t_map_start = time.perf_counter()
+                domain_product = ExternalProductNormalizer.to_domain_dto(
+                    barcode=barcode,
+                    raw_product=off_resp.product_data,
+                    raw_payload=off_resp.raw_payload
+                )
+                map_ms = (time.perf_counter() - t_map_start) * 1000.0
 
-            t_map_start = time.perf_counter()
-            domain_product = ExternalProductNormalizer.to_domain_dto(
-                barcode=barcode,
-                raw_product=off_resp.product_data,
-                raw_payload=off_resp.raw_payload
-            )
-            map_ms = (time.perf_counter() - t_map_start) * 1000.0
+                image_url = off_resp.product_data.get("image_front_url") or off_resp.product_data.get("image_url")
+                is_verified = False
 
-            image_url = off_resp.product_data.get("image_front_url") or off_resp.product_data.get("image_url")
-            is_verified = False
-
-            # Safe Persistence attempt
-            is_persisted = self._safe_persist_external_product(
-                barcode=barcode,
-                raw_product=off_resp.product_data,
-                raw_payload=off_resp.raw_payload
-            )
+                # Safe Persistence attempt
+                is_persisted = self._safe_persist_external_product(
+                    barcode=barcode,
+                    raw_product=off_resp.product_data,
+                    raw_payload=off_resp.raw_payload
+                )
 
         # Step 2: Multi-Engine Evaluation via EvaluationCoordinator
         coord_result: EvaluationCoordinatorResult = self.coordinator.evaluate(domain_product)
