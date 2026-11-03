@@ -81,9 +81,9 @@ class NutrientObservationInput(BaseModel):
     per_serving_value: Optional[Decimal] = Field(None, description="Numeric value per serving")
     unit: str = Field(..., description="Measurement unit (e.g. 'g', 'mg', 'kcal')")
     data_status: NutrientDataStatus = Field(..., description="Four-state declaration status from label")
-    measurement_basis: MeasurementBasis = Field(
-        default=MeasurementBasis.PER_100G,
-        description="Explicit statutory measurement basis: PER_100G, PER_100ML, or PER_SERVING"
+    measurement_basis: Optional[MeasurementBasis] = Field(
+        default=None,
+        description="Explicit statutory measurement basis: PER_100G, PER_100ML, or PER_SERVING (None if unresolved)"
     )
 
 

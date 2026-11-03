@@ -19,6 +19,7 @@ class ProductSummaryResponse(BaseModel):
     barcode: str
     product_name: str
     brand_name: Optional[str] = None
+    image_url: Optional[str] = None
     food_form: str
     food_category: Optional[str] = None
     package_size: Optional[str] = None
@@ -28,11 +29,13 @@ class ProductSummaryResponse(BaseModel):
     source_id: Optional[str] = None
     nutrient_count: int = 0
     ingredient_count: int = 0
+    is_persisted: bool = True
 
 
 class EnginePerformanceMetrics(BaseModel):
     """Detailed latency metrics for database lookup and deterministic engines."""
     db_lookup_ms: float = Field(..., description="Database query time in milliseconds")
+    external_lookup_ms: Optional[float] = Field(None, description="External Open Food Facts query time in milliseconds")
     domain_mapping_ms: float = Field(..., description="ORM to domain mapping time in milliseconds")
     nutrition_engine_ms: float = Field(..., description="Nutrition engine evaluation time in milliseconds")
     icmr_hfss_engine_ms: float = Field(..., description="ICMR HFSS engine evaluation time in milliseconds")
