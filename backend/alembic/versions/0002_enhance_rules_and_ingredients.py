@@ -17,7 +17,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
-revision: str = '0002_enhance_rules_and_ingredients'
+revision: str = '0002_enhance_rules'
 down_revision: Union[str, None] = '0001_initial_foundation'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

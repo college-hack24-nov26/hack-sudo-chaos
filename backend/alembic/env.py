@@ -42,6 +42,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
+        version_num_length=128,
         dialect_opts={"paramstyle": "named"},
     )
 
@@ -55,7 +56,6 @@ def run_migrations_online() -> None:
     Uses our configured SQLAlchemy 2.0 engine to establish a live connection
     to PostgreSQL and execute migrations within a transaction.
     """
-    # Use the shared engine configured in app.db.session
     connectable = engine
 
     with connectable.connect() as connection:
@@ -63,6 +63,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
+            version_num_length=128,
         )
 
         with context.begin_transaction():
