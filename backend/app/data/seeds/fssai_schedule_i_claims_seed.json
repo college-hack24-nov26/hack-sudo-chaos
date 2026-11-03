@@ -35,10 +35,10 @@
       ]
     },
     "permitted_synonyms_schedule_ii": [
+      "Trans Fat Free",
       "Zero Trans Fat",
-      "No Trans Fat",
-      "Trans Fatty Acid Free",
-      "Free of Trans Fat"
+      "Free of Trans Fat",
+      "No Trans Fat"
     ],
     "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(b)",
     "official_source_version": "Version III (04-10-2022)",
@@ -82,9 +82,10 @@
       ]
     },
     "permitted_synonyms_schedule_ii": [
+      "Trans Fat Free",
       "Zero Trans Fat",
-      "No Trans Fat",
-      "Trans Fatty Acid Free"
+      "Free of Trans Fat",
+      "No Trans Fat"
     ],
     "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(b)",
     "official_source_version": "Version III (04-10-2022)",
