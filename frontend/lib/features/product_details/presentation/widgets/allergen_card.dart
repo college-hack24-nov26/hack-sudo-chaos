@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -6,30 +7,50 @@ import '../../data/models/product_response_model.dart';
 
 class AllergenCard extends StatelessWidget {
   final IngredientAnalysis? ingredientAnalysis;
+  final String? barcode;
+  final VoidCallback? onTap;
 
-  const AllergenCard({super.key, this.ingredientAnalysis});
+  const AllergenCard({
+    super.key,
+    this.ingredientAnalysis,
+    this.barcode,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final declared = ingredientAnalysis?.declaredAllergens ?? [];
     final mayContain = ingredientAnalysis?.mayContainAllergens ?? [];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: AppSpacing.borderRadiusCard,
-        border: Border.all(color: AppColors.border, width: 1.0),
-      ),
+    return GestureDetector(
+      onTap: onTap ??
+          (barcode != null && barcode!.isNotEmpty
+              ? () => context.push('/product/$barcode/allergens')
+              : null),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: AppSpacing.borderRadiusCard,
+          border: Border.all(color: AppColors.border, width: 1.0),
+        ),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          const Row(
+          Row(
             children: [
-              Icon(Icons.shield_outlined, size: 16.0, color: AppColors.concern),
-              SizedBox(width: 6.0),
-              Text('Allergen Information', style: AppTypography.h3),
+              const Icon(Icons.shield_outlined, size: 16.0, color: AppColors.concern),
+              const SizedBox(width: 6.0),
+              const Expanded(
+                child: Text('Allergen Information', style: AppTypography.h3),
+              ),
+              if (barcode != null || onTap != null)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20.0,
+                  color: AppColors.textSecondary,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -103,6 +124,7 @@ class AllergenCard extends StatelessWidget {
             ],
           ],
         ],
+      ),
       ),
     );
   }

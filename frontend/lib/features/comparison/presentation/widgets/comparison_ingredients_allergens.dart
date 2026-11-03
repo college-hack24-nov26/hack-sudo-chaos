@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/comparison_models.dart';
 import '../../../product_details/data/models/product_response_model.dart';
@@ -50,6 +51,15 @@ class ComparisonIngredientsAllergens extends StatelessWidget {
           // Right Card (Allergen Information)
           Expanded(
             child: _buildComparisonCard(
+              context: context,
+              onTap: () {
+                final barcode = productA?.product.barcode.isNotEmpty == true
+                    ? productA!.product.barcode
+                    : (productB?.product.barcode ?? '');
+                if (barcode.isNotEmpty) {
+                  context.push('/product/$barcode/allergens');
+                }
+              },
               headerIcon: Icons.shield_outlined,
               headerIconColor: const Color(0xFFE85D35),
               headerTitle: 'Allergen Information',
@@ -69,6 +79,8 @@ class ComparisonIngredientsAllergens extends StatelessWidget {
   }
 
   Widget _buildComparisonCard({
+    BuildContext? context,
+    VoidCallback? onTap,
     required IconData headerIcon,
     required Color headerIconColor,
     required String headerTitle,
@@ -81,8 +93,10 @@ class ComparisonIngredientsAllergens extends StatelessWidget {
     required String rightText,
     required String rightLabel,
   }) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 140.0),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 140.0),
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF7F5),
@@ -224,6 +238,7 @@ class ComparisonIngredientsAllergens extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

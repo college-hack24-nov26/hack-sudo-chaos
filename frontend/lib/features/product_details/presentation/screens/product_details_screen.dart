@@ -240,6 +240,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                           Expanded(
                             child: AllergenCard(
                               ingredientAnalysis: details.ingredientAnalysis,
+                              barcode: barcode,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -262,6 +263,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                         children: [
                           AllergenCard(
                             ingredientAnalysis: details.ingredientAnalysis,
+                            barcode: barcode,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           FssaiClaimsCard(

@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../product_details/presentation/providers/product_details_provider.dart';
@@ -44,7 +45,8 @@ class _IngredientDetailsScreenState extends ConsumerState<IngredientDetailsScree
     } else if (sectionKey == 'additives') {
       targetContext = _keys.additivesKey.currentContext;
     } else if (sectionKey == 'allergens') {
-      targetContext = _keys.allergensKey.currentContext;
+      context.push('/product/${widget.barcode}/allergens');
+      return;
     } else if (sectionKey == 'claims') {
       targetContext = _keys.claimsKey.currentContext;
     }
