@@ -123,3 +123,36 @@
 - **Executed Operations**: Environment creation, package installation, import smoke-tests, settings validation, session instantiation, model metadata discovery.
 - **Verified Operations**: All 11 models registered, imports working, session creation verified, error handling tested.
 - **Outstanding Blocker**: Starting the PostgreSQL Windows service (`postgresql-x64-18`) on the host to run `alembic revision --autogenerate` and `alembic upgrade head`.
+
+
+---
+
+## Phase 2: Product API & Data Access Layer
+
+### Stage 2: Product Repository Implementation
+- **Objective**: Implement clean, read-focused Data Access Layer (DAL) for Product entities with zero N+1 query overhead.
+- **Files Created**:
+  - `backend/app/repositories/__init__.py`
+  - `backend/app/repositories/product_repository.py`
+  - `backend/tests/test_product_repository.py`
+- **Key Methods Implemented**:
+  - `get_by_barcode(barcode, load_relationships=True)`: Retrieves product by unique barcode with eager-loaded 3NF relations.
+  - `get_by_id(product_id, load_relationships=True)`: Retrieves product by primary key UUID.
+  - `exists_by_barcode(barcode)`: High-performance `COUNT(1)` check avoiding ORM instance allocation.
+  - `get_verified_by_barcode(barcode)`: Retrieves product filtered by `is_verified = True`.
+- **Eager-Loading Architecture**:
+  - `joinedload(Product.data_source)`: Single-row join for Many-to-One data source.
+  - `selectinload(Product.nutrients).joinedload(ProductNutrient.nutrient)`: Collection loading without Cartesian row multiplication.
+  - `selectinload(Product.ingredients).joinedload(ProductIngredient.ingredient)`: Collection loading respecting `sequence_order` (descending weight order).
+- **Test Results**:
+  - Executed: `.\backend\venv\Scripts\python.exe -m unittest backend/tests/test_product_repository.py -v`
+  - Result: 11/11 unit tests passed in 0.520s.
+  - Executed full suite: 19/19 tests passed across `backend/tests/` in 0.601s (`python -m unittest discover -s backend/tests -v`).
+  - Added full test coverage for `get_by_id(UUID)`, `get_by_id(str)`, `get_by_id(invalid_str)`, and `get_by_barcode(load_relationships=False)`.
+  - Cleaned up unused imports in test module.
+  - Refined docstring for ingredient ordering sequence convention.
+  - **Database Cleanliness Verified**: Post-test inspection confirmed `SELECT COUNT(*) FROM products;` is `0`. Transactional rollback in test `tearDown()` left zero residual rows in PostgreSQL (all 13 application tables verified empty).
+- **Safety Confirmations**:
+  - Zero models modified.
+  - Zero migrations created, altered, or executed.
+  - Zero development database records modified.
