@@ -79,39 +79,39 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
             serving_size_unit="g",
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("380.0"), per_serving_value=Decimal("114.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("380.0"), per_serving_value=Decimal("114.0"),
                     unit="kcal", data_status=NutrientDataStatus.PRESENT
                 ),
                 "protein": NutrientObservationInput(
-                    nutrient_code="protein", per_100g_value=Decimal("19.5"), per_serving_value=Decimal("5.85"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="protein", per_100g_value=Decimal("19.5"), per_serving_value=Decimal("5.85"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "carbohydrates": NutrientObservationInput(
-                    nutrient_code="carbohydrates", per_100g_value=Decimal("58.0"), per_serving_value=Decimal("17.4"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="carbohydrates", per_100g_value=Decimal("58.0"), per_serving_value=Decimal("17.4"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "total_sugars": NutrientObservationInput(
-                    nutrient_code="total_sugars", per_100g_value=Decimal("2.5"), per_serving_value=Decimal("0.75"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_sugars", per_100g_value=Decimal("2.5"), per_serving_value=Decimal("0.75"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
                     unit="g", data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "total_fat": NutrientObservationInput(
-                    nutrient_code="total_fat", per_100g_value=Decimal("5.2"), per_serving_value=Decimal("1.56"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_fat", per_100g_value=Decimal("5.2"), per_serving_value=Decimal("1.56"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=Decimal("0.8"), per_serving_value=Decimal("0.24"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="saturated_fat", per_100g_value=Decimal("0.8"), per_serving_value=Decimal("0.24"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
                     unit="g", data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "sodium": NutrientObservationInput(
-                    nutrient_code="sodium", per_100g_value=Decimal("12.0"), per_serving_value=Decimal("3.6"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="sodium", per_100g_value=Decimal("12.0"), per_serving_value=Decimal("3.6"),
                     unit="mg", data_status=NutrientDataStatus.PRESENT
                 ),
             },
@@ -183,11 +183,11 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
 
         # Mark trans_fat and sodium as NOT_DECLARED with None values
         product.nutrients["trans_fat"] = NutrientObservationInput(
-            nutrient_code="trans_fat", per_100g_value=None, per_serving_value=None,
+            measurement_basis=MeasurementBasis.PER_100G, nutrient_code="trans_fat", per_100g_value=None, per_serving_value=None,
             unit="g", data_status=NutrientDataStatus.NOT_DECLARED
         )
         product.nutrients["sodium"] = NutrientObservationInput(
-            nutrient_code="sodium", per_100g_value=None, per_serving_value=None,
+            measurement_basis=MeasurementBasis.PER_100G, nutrient_code="sodium", per_100g_value=None, per_serving_value=None,
             unit="mg", data_status=NutrientDataStatus.NOT_DECLARED
         )
 
@@ -216,11 +216,11 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
 
         # Both added_sugars and trans_fat explicitly 0.0
         product.nutrients["trans_fat"] = NutrientObservationInput(
-            nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
+            measurement_basis=MeasurementBasis.PER_100G, nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
             unit="g", data_status=NutrientDataStatus.EXPLICITLY_ZERO
         )
         product.nutrients["saturated_fat"] = NutrientObservationInput(
-            nutrient_code="saturated_fat", per_100g_value=Decimal("0.5"), per_serving_value=Decimal("0.15"),
+            measurement_basis=MeasurementBasis.PER_100G, nutrient_code="saturated_fat", per_100g_value=Decimal("0.5"), per_serving_value=Decimal("0.15"),
             unit="g", data_status=NutrientDataStatus.PRESENT
         )
 
@@ -243,7 +243,7 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
         product = self._create_complete_solid_product()
 
         product.nutrients["saturated_fat"] = NutrientObservationInput(
-            nutrient_code="saturated_fat", per_100g_value=None, per_serving_value=None,
+            measurement_basis=MeasurementBasis.PER_100G, nutrient_code="saturated_fat", per_100g_value=None, per_serving_value=None,
             unit="g", data_status=NutrientDataStatus.UNKNOWN
         )
 
@@ -267,7 +267,7 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
         product = self._create_complete_solid_product()
 
         # Attach an invalid measurement basis dynamically to test validation guard
-        product.nutrients["protein"].__dict__["measurement_basis"] = "PER_SPOON"
+        product.nutrients["protein"].measurement_basis = "PER_SPOON"
 
         with self.assertRaises(ValueError) as ctx:
             coordinator.evaluate(product)
@@ -511,4 +511,3 @@ class TestEvaluationCoordinatorIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

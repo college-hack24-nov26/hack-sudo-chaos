@@ -19,7 +19,8 @@ from app.domain.engines.contracts import (
     EngineBatchResult,
     EvaluationStatus,
     NutrientDataStatus,
-    IngredientProcessingClass
+    IngredientProcessingClass,
+    MeasurementBasis,
 )
 
 
@@ -51,8 +52,29 @@ def evaluate_icmr_hfss(
         threshold = Decimal(str(rule["threshold_value"]))
 
         # Check solid vs liquid applicability
-        if rule_food_form != product.food_form.value:
+        if rule_food_form not in ("both", "any", product.food_form.value):
             continue
+
+        # Determine permitted measurement bases from the applicable rule:
+        # Measurement basis is determined from the applicable rule definition, not inferred from food form.
+        permitted_bases: List[MeasurementBasis] = []
+        if "permitted_measurement_bases" in rule and rule["permitted_measurement_bases"]:
+            for b in rule["permitted_measurement_bases"]:
+                permitted_bases.append(b if isinstance(b, MeasurementBasis) else MeasurementBasis(b))
+        elif "measurement_basis" in rule and rule["measurement_basis"]:
+            mb = rule["measurement_basis"]
+            if isinstance(mb, list):
+                for b in mb:
+                    permitted_bases.append(b if isinstance(b, MeasurementBasis) else MeasurementBasis(b))
+            else:
+                permitted_bases.append(mb if isinstance(mb, MeasurementBasis) else MeasurementBasis(mb))
+        else:
+            permitted_bases.append(
+                MeasurementBasis.PER_100G
+                if rule_food_form == "solid"
+                else MeasurementBasis.PER_100ML
+            )
+        permitted_str = ", ".join(b.value for b in permitted_bases)
 
         # Handle Salt vs Sodium mapping
         if nutrient_code == "sodium":
@@ -77,11 +99,56 @@ def evaluate_icmr_hfss(
                 )
                 continue
 
-            sodium_mg = obs.per_100g_value or Decimal("0")
+            if obs.per_100g_value is None:
+                status = EvaluationStatus.INSUFFICIENT_DATA
+                summary_counts[status] += 1
+                results.append(
+                    RuleEvaluationResult(
+                        engine_name="ICMR_HFSS",
+                        rule_id=rule_id,
+                        rule_code=rule_code,
+                        outcome=status,
+                        title="ICMR Salt Threshold of Concern",
+                        human_readable_explanation="Sodium declared numeric value is missing (null); cannot evaluate salt threshold.",
+                        evidence_used={},
+                        missing_evidence=["sodium"],
+                        statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                        official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                        source_version="May 2024"
+                    )
+                )
+                continue
+
+            if obs.measurement_basis is None or obs.measurement_basis not in permitted_bases:
+                status = EvaluationStatus.INSUFFICIENT_DATA
+                summary_counts[status] += 1
+                results.append(
+                    RuleEvaluationResult(
+                        engine_name="ICMR_HFSS",
+                        rule_id=rule_id,
+                        rule_code=rule_code,
+                        outcome=status,
+                        title="ICMR Salt Threshold of Concern",
+                        human_readable_explanation=(
+                            f"Sodium measurement basis is "
+                            f"{'unresolved (None)' if obs.measurement_basis is None else f'incompatible ({obs.measurement_basis.value})'}; "
+                            f"rule requires '{permitted_str}'. Cannot evaluate salt threshold of concern."
+                        ),
+                        evidence_used={"measurement_basis": obs.measurement_basis.value if obs.measurement_basis else None},
+                        missing_evidence=["sodium_measurement_basis"],
+                        statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                        official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                        source_version="May 2024"
+                    )
+                )
+                continue
+
+            sodium_mg = obs.per_100g_value
             salt_mg = sodium_mg * Decimal("2.5")  # Conversion factor: Salt (mg) = Sodium (mg) * 2.5
             breached = salt_mg > threshold
             outcome = EvaluationStatus.FAIL if breached else EvaluationStatus.PASS
             summary_counts[outcome] += 1
+            basis_unit = "g" if obs.measurement_basis == MeasurementBasis.PER_100G else "ml"
             results.append(
                 RuleEvaluationResult(
                     engine_name="ICMR_HFSS",
@@ -90,7 +157,7 @@ def evaluate_icmr_hfss(
                     outcome=outcome,
                     title="ICMR Salt Threshold of Concern",
                     human_readable_explanation=(
-                        f"Salt content is {float(salt_mg):.1f}mg/100{'g' if rule_food_form == 'solid' else 'ml'} "
+                        f"Salt content is {float(salt_mg):.1f}mg/100{basis_unit} "
                         f"({float(sodium_mg):.1f}mg sodium * 2.5), {'exceeding' if breached else 'within'} the "
                         f"ICMR threshold of concern ({float(threshold):.1f}mg)."
                     ),
@@ -134,10 +201,55 @@ def evaluate_icmr_hfss(
                 )
                 continue
 
-            val = obs.per_100g_value or Decimal("0")
+            if obs.per_100g_value is None:
+                status = EvaluationStatus.INSUFFICIENT_DATA
+                summary_counts[status] += 1
+                results.append(
+                    RuleEvaluationResult(
+                        engine_name="ICMR_HFSS",
+                        rule_id=rule_id,
+                        rule_code=rule_code,
+                        outcome=status,
+                        title="ICMR Added Fat Threshold of Concern",
+                        human_readable_explanation="Added fat declared numeric value is missing (null); cannot evaluate threshold.",
+                        evidence_used={},
+                        missing_evidence=["added_fat"],
+                        statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                        official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                        source_version="May 2024"
+                    )
+                )
+                continue
+
+            if obs.measurement_basis is None or obs.measurement_basis not in permitted_bases:
+                status = EvaluationStatus.INSUFFICIENT_DATA
+                summary_counts[status] += 1
+                results.append(
+                    RuleEvaluationResult(
+                        engine_name="ICMR_HFSS",
+                        rule_id=rule_id,
+                        rule_code=rule_code,
+                        outcome=status,
+                        title="ICMR Added Fat Threshold of Concern",
+                        human_readable_explanation=(
+                            f"Added fat measurement basis is "
+                            f"{'unresolved (None)' if obs.measurement_basis is None else f'incompatible ({obs.measurement_basis.value})'}; "
+                            f"rule requires '{permitted_str}'."
+                        ),
+                        evidence_used={"measurement_basis": obs.measurement_basis.value if obs.measurement_basis else None},
+                        missing_evidence=["added_fat_measurement_basis"],
+                        statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                        official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                        source_version="May 2024"
+                    )
+                )
+                continue
+
+            val = obs.per_100g_value
             breached = val > threshold
             outcome = EvaluationStatus.FAIL if breached else EvaluationStatus.PASS
             summary_counts[outcome] += 1
+            basis_unit = "g" if obs.measurement_basis == MeasurementBasis.PER_100G else "ml"
             results.append(
                 RuleEvaluationResult(
                     engine_name="ICMR_HFSS",
@@ -146,7 +258,7 @@ def evaluate_icmr_hfss(
                     outcome=outcome,
                     title="ICMR Added Fat Threshold of Concern",
                     human_readable_explanation=(
-                        f"Added fat content is {float(val):.2f}g/100{'g' if rule_food_form == 'solid' else 'ml'}, "
+                        f"Added fat content is {float(val):.2f}g/100{basis_unit}, "
                         f"{'exceeding' if breached else 'within'} the ICMR threshold of concern ({float(threshold):.1f}g)."
                     ),
                     evidence_used={"added_fat_observed": float(val), "threshold": float(threshold)},
@@ -180,10 +292,55 @@ def evaluate_icmr_hfss(
             )
             continue
 
-        val = obs.per_100g_value or Decimal("0")
+        if obs.per_100g_value is None:
+            status = EvaluationStatus.INSUFFICIENT_DATA
+            summary_counts[status] += 1
+            results.append(
+                RuleEvaluationResult(
+                    engine_name="ICMR_HFSS",
+                    rule_id=rule_id,
+                    rule_code=rule_code,
+                    outcome=status,
+                    title=f"ICMR {nutrient_code.replace('_', ' ').title()} Threshold of Concern",
+                    human_readable_explanation=f"Nutrient '{nutrient_code}' declared numeric value is missing (null).",
+                    evidence_used={},
+                    missing_evidence=[nutrient_code],
+                    statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                    official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                    source_version="May 2024"
+                )
+            )
+            continue
+
+        if obs.measurement_basis is None or obs.measurement_basis not in permitted_bases:
+            status = EvaluationStatus.INSUFFICIENT_DATA
+            summary_counts[status] += 1
+            results.append(
+                RuleEvaluationResult(
+                    engine_name="ICMR_HFSS",
+                    rule_id=rule_id,
+                    rule_code=rule_code,
+                    outcome=status,
+                    title=f"ICMR {nutrient_code.replace('_', ' ').title()} Threshold of Concern",
+                    human_readable_explanation=(
+                        f"Nutrient '{nutrient_code}' measurement basis is "
+                        f"{'unresolved (None)' if obs.measurement_basis is None else f'incompatible ({obs.measurement_basis.value})'}; "
+                        f"rule requires '{permitted_str}'."
+                    ),
+                    evidence_used={"measurement_basis": obs.measurement_basis.value if obs.measurement_basis else None},
+                    missing_evidence=[f"{nutrient_code}_measurement_basis"],
+                    statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.1",
+                    official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
+                    source_version="May 2024"
+                )
+            )
+            continue
+
+        val = obs.per_100g_value
         breached = val > threshold
         outcome = EvaluationStatus.FAIL if breached else EvaluationStatus.PASS
         summary_counts[outcome] += 1
+        basis_unit = "g" if obs.measurement_basis == MeasurementBasis.PER_100G else "ml"
         results.append(
             RuleEvaluationResult(
                 engine_name="ICMR_HFSS",
@@ -192,7 +349,7 @@ def evaluate_icmr_hfss(
                 outcome=outcome,
                 title=f"ICMR {nutrient_code.replace('_', ' ').title()} Threshold of Concern",
                 human_readable_explanation=(
-                    f"Observed {float(val):.2f}{obs.unit}/100{'g' if rule_food_form == 'solid' else 'ml'} "
+                    f"Observed {float(val):.2f}{obs.unit}/100{basis_unit} "
                     f"{'exceeds' if breached else 'is within'} the ICMR threshold of concern ({float(threshold):.1f}{obs.unit})."
                 ),
                 evidence_used={"observed": float(val), "threshold": float(threshold), "unit": obs.unit},
@@ -261,7 +418,13 @@ def evaluate_icmr_hfss(
     energy_obs = product.nutrients.get("energy")
     determined_cat: Optional[str] = None
 
-    if not energy_obs or energy_obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN) or energy_obs.per_100g_value is None:
+    if (
+        not energy_obs
+        or energy_obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN)
+        or energy_obs.per_100g_value is None
+        or energy_obs.measurement_basis is None
+        or energy_obs.measurement_basis != MeasurementBasis.PER_100G
+    ):
         status = EvaluationStatus.INSUFFICIENT_DATA
         summary_counts[status] += 1
         results.append(
@@ -271,8 +434,14 @@ def evaluate_icmr_hfss(
                 rule_code="ICMR_TABLE_15_2_MATRIX",
                 outcome=status,
                 title="ICMR Table 15.2 Matrix Evaluation",
-                human_readable_explanation="Total energy declaration is missing; cannot determine Table 15.2 nutritional category.",
-                evidence_used={},
+                human_readable_explanation=(
+                    "Total energy declaration is missing, null, or has an incompatible/unresolved measurement basis "
+                    "(must be PER_100G); cannot determine Table 15.2 nutritional category."
+                ),
+                evidence_used={
+                    "energy_status": energy_obs.data_status.value if energy_obs else "ABSENT",
+                    "measurement_basis": energy_obs.measurement_basis.value if (energy_obs and energy_obs.measurement_basis) else None
+                },
                 missing_evidence=["energy"],
                 statutory_citation="ICMR-NIN Dietary Guidelines for Indians (2024), Guideline 15, Table 15.2, p. 97",
                 official_source_url="https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf",
@@ -372,4 +541,3 @@ def evaluate_icmr_hfss(
         results=results,
         summary_counts=summary_counts
     )
-

@@ -17,7 +17,8 @@ from app.domain.engines.contracts import (
     RuleEvaluationResult,
     EngineBatchResult,
     EvaluationStatus,
-    NutrientDataStatus
+    NutrientDataStatus,
+    MeasurementBasis,
 )
 
 # FSSAI Standard Adult Daily Reference Values (2,000 kcal diet reference)
@@ -90,6 +91,36 @@ def evaluate_nutrition(
 
         # If reference RDI exists and value is present, calculate % contribution
         if ref and obs.per_100g_value is not None:
+            expected_basis = (
+                MeasurementBasis.PER_100G
+                if product.food_form.value == "solid"
+                else MeasurementBasis.PER_100ML
+            )
+            if obs.measurement_basis is None or obs.measurement_basis != expected_basis:
+                status = EvaluationStatus.INSUFFICIENT_DATA
+                summary_counts[status] += 1
+                results.append(
+                    RuleEvaluationResult(
+                        engine_name="NUTRITION",
+                        rule_id=f"fssai_rdi_contrib_{nutrient_code}",
+                        rule_code=f"RDI_CONTRIBUTION_{nutrient_code.upper()}",
+                        outcome=status,
+                        title=f"{display_name} Daily Contribution",
+                        human_readable_explanation=(
+                            f"Measurement basis for '{display_name}' is "
+                            f"{'unresolved (None)' if obs.measurement_basis is None else f'incompatible ({obs.measurement_basis.value})'}; "
+                            f"expected '{expected_basis.value}'. Cannot evaluate 100{'g' if product.food_form.value == 'solid' else 'ml'} daily reference contribution."
+                        ),
+                        evidence_used={"measurement_basis": obs.measurement_basis.value if obs.measurement_basis else None},
+                        missing_evidence=[f"{nutrient_code}_measurement_basis"],
+                        statutory_citation="FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)",
+                        official_source_url="https://fssai.gov.in/food-law/regulations/amendments/labelling-display",
+                        source_version="Gazette 17-11-2020",
+                        warnings_or_limitations="Calculations require a compatible per-100g or per-100ml basis matching product food form."
+                    )
+                )
+                continue
+
             rdi_val = ref["value"]
             val_100 = obs.per_100g_value
             pct_100 = (val_100 / rdi_val) * Decimal("100.0")
@@ -139,4 +170,3 @@ def evaluate_nutrition(
         results=results,
         summary_counts=summary_counts
     )
-

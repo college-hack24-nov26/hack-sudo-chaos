@@ -17,7 +17,8 @@ from app.domain.engines.contracts import (
     EngineBatchResult,
     EvaluationStatus,
     NutrientDataStatus,
-    IngredientSugarClass
+    IngredientSugarClass,
+    MeasurementBasis
 )
 
 
@@ -51,7 +52,14 @@ def _evaluate_node(
         nutrient_code = node["nutrient_code"]
         op = node["operator"]
         threshold = Decimal(str(node["threshold_value"]))
-        basis = node.get("measurement_basis", "PER_100G")
+        basis = node.get("measurement_basis")
+        if not basis:
+            return (
+                EvaluationStatus.INSUFFICIENT_DATA,
+                {},
+                [],
+                f"Rule condition for '{nutrient_code}' does not specify a measurement basis."
+            )
         req_form = node.get("food_form", "both")
 
         # Check food form applicability
@@ -76,18 +84,73 @@ def _evaluate_node(
         if val is None:
             return (EvaluationStatus.INSUFFICIENT_DATA, {}, [nutrient_code], f"Nutrient '{nutrient_code}' has null value.")
 
+        if obs.measurement_basis is None:
+            return (
+                EvaluationStatus.INSUFFICIENT_DATA,
+                {},
+                [f"{nutrient_code}_measurement_basis"],
+                f"Nutrient '{nutrient_code}' has unresolved measurement basis (None)."
+            )
+
+        # Handle PER_100G and PER_100ML basis
+        if basis in ("PER_100G", "PER_100ML"):
+            if obs.measurement_basis.value != basis:
+                return (
+                    EvaluationStatus.INSUFFICIENT_DATA,
+                    {"required_basis": basis, "observed_basis": obs.measurement_basis.value},
+                    [f"{nutrient_code}_measurement_basis"],
+                    f"Nutrient '{nutrient_code}' basis '{obs.measurement_basis.value}' is incompatible with rule required basis '{basis}'."
+                )
+            val = obs.per_100g_value
+
         # Handle PER_100KCAL basis
-        if basis == "PER_100KCAL":
+        elif basis == "PER_100KCAL":
+            if obs.measurement_basis not in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML):
+                return (
+                    EvaluationStatus.INSUFFICIENT_DATA,
+                    {"observed_basis": obs.measurement_basis.value},
+                    [f"{nutrient_code}_measurement_basis"],
+                    f"Nutrient '{nutrient_code}' basis '{obs.measurement_basis.value}' cannot be converted to PER_100KCAL without compatible reference."
+                )
             energy_obs = product.nutrients.get("energy")
-            if not energy_obs or energy_obs.per_100g_value is None or energy_obs.per_100g_value <= Decimal("0"):
+            if not energy_obs or energy_obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN):
                 return (
                     EvaluationStatus.INSUFFICIENT_DATA,
                     {},
                     ["energy"],
                     "Total energy declaration required to evaluate per-100 kcal basis."
                 )
+            if energy_obs.per_100g_value is None or energy_obs.per_100g_value <= Decimal("0"):
+                return (
+                    EvaluationStatus.INSUFFICIENT_DATA,
+                    {},
+                    ["energy"],
+                    "Total energy declaration required to evaluate per-100 kcal basis."
+                )
+            if energy_obs.measurement_basis is None:
+                return (
+                    EvaluationStatus.INSUFFICIENT_DATA,
+                    {},
+                    ["energy_measurement_basis"],
+                    "Energy declaration has unresolved measurement basis."
+                )
+            if obs.measurement_basis != energy_obs.measurement_basis:
+                return (
+                    EvaluationStatus.INSUFFICIENT_DATA,
+                    {"nutrient_basis": obs.measurement_basis.value, "energy_basis": energy_obs.measurement_basis.value},
+                    ["measurement_basis"],
+                    f"Nutrient '{nutrient_code}' basis '{obs.measurement_basis.value}' is incompatible with energy basis '{energy_obs.measurement_basis.value}'."
+                )
             energy_val = energy_obs.per_100g_value
-            val = (val / energy_val) * Decimal("100.0")
+            val = (obs.per_100g_value / energy_val) * Decimal("100.0")
+
+        else:
+            return (
+                EvaluationStatus.INSUFFICIENT_DATA,
+                {"required_basis": basis},
+                [],
+                f"Unsupported rule measurement basis '{basis}'."
+            )
 
         try:
             satisfied = _compare(val, op, threshold)
@@ -116,10 +179,27 @@ def _evaluate_node(
 
         if not obs or obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN):
             return (EvaluationStatus.INSUFFICIENT_DATA, {}, [nutrient_code], f"Nutrient '{nutrient_code}' is not declared.")
-        if not energy_obs or energy_obs.per_100g_value is None or energy_obs.per_100g_value <= Decimal("0"):
-            return (EvaluationStatus.INSUFFICIENT_DATA, {}, ["energy"], "Total energy declaration required for % energy calculation.")
+        if obs.per_100g_value is None:
+            return (EvaluationStatus.INSUFFICIENT_DATA, {}, [nutrient_code], f"Nutrient '{nutrient_code}' has null value.")
+        if obs.measurement_basis is None:
+            return (EvaluationStatus.INSUFFICIENT_DATA, {}, [f"{nutrient_code}_measurement_basis"], f"Nutrient '{nutrient_code}' has unresolved measurement basis.")
 
-        val_g = obs.per_100g_value or Decimal("0")
+        if not energy_obs or energy_obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN):
+            return (EvaluationStatus.INSUFFICIENT_DATA, {}, ["energy"], "Total energy declaration required for % energy calculation.")
+        if energy_obs.per_100g_value is None or energy_obs.per_100g_value <= Decimal("0"):
+            return (EvaluationStatus.INSUFFICIENT_DATA, {}, ["energy"], "Total energy declaration required for % energy calculation.")
+        if energy_obs.measurement_basis is None:
+            return (EvaluationStatus.INSUFFICIENT_DATA, {}, ["energy_measurement_basis"], "Energy declaration has unresolved measurement basis.")
+
+        if obs.measurement_basis != energy_obs.measurement_basis:
+            return (
+                EvaluationStatus.INSUFFICIENT_DATA,
+                {"nutrient_basis": obs.measurement_basis.value, "energy_basis": energy_obs.measurement_basis.value},
+                ["measurement_basis"],
+                f"Nutrient '{nutrient_code}' basis '{obs.measurement_basis.value}' is incompatible with energy basis '{energy_obs.measurement_basis.value}'."
+            )
+
+        val_g = obs.per_100g_value
         energy_kcal = energy_obs.per_100g_value
 
         # Saturated fat factor is 9.0 kcal/g
@@ -160,12 +240,7 @@ def _evaluate_node(
                 [],
                 f"Contains ingredients that impart sweetness or replace added sugar: {', '.join(violating_ingredients)}."
             )
-        return (
-            EvaluationStatus.PASS,
-            {"ingredient_non_addition_verified": True},
-            [],
-            "Ingredient list contains zero added free sugars or sweetening substitutes."
-        )
+        return (EvaluationStatus.PASS, {"ingredients_audited": len(product.ingredients)}, [], "No disallowed ingredients found.")
 
     # 4. Nested Expression Group
     elif node_type == "EXPRESSION_GROUP":
@@ -178,53 +253,71 @@ def _evaluate_node(
 
 
 def _evaluate_group(
-    group: Dict[str, Any],
-    product: ProductEvaluationInput
+    group_node: Dict[str, Any],
+    product: ProductEvaluationInput,
+    depth: int = 0
 ) -> Tuple[EvaluationStatus, Dict[str, Any], List[str], str]:
     """
-    Recursively evaluates an AST condition group with AND/OR logic.
+    Evaluates a composite boolean AST node (AND / OR).
+    Recursion depth limit: 5 levels.
     """
-    log_op = group.get("logical_operator", "AND")
-    conditions = group.get("conditions", [])
+    if depth > 5:
+        return (
+            EvaluationStatus.INDETERMINATE,
+            {},
+            [],
+            f"AST recursion depth limit exceeded (max 5, current {depth})"
+        )
+
+    log_op = group_node.get("logical_operator", "AND").upper()
+    conditions = group_node.get("conditions", [])
 
     if not conditions:
-        return (EvaluationStatus.INSUFFICIENT_DATA, {}, [], "Condition group contains no conditions.")
+        return (EvaluationStatus.INDETERMINATE, {}, [], "Empty condition group")
 
-    child_results = [_evaluate_node(c, product) for c in conditions]
+    sub_results = []
+    for cond in conditions:
+        if "logical_operator" in cond:
+            res = _evaluate_group(cond, product, depth=depth + 1)
+        else:
+            res = _evaluate_node(cond, product)
+        sub_results.append(res)
 
-    statuses = [r[0] for r in child_results]
-    all_evidence: Dict[str, Any] = {}
-    all_missing: List[str] = []
-    explanations: List[str] = []
+    all_evidence = {}
+    all_missing = []
+    explanations = []
 
-    for idx, (_, ev, miss, exp) in enumerate(child_results):
-        all_evidence[f"condition_{idx + 1}"] = ev
+    for i, (st, ev, miss, exp) in enumerate(sub_results):
+        all_evidence[f"condition_{i+1}"] = ev
         all_missing.extend(miss)
         if exp:
             explanations.append(exp)
 
-    # AND evaluation: all must PASS
+    # Boolean Evaluation Logic
     if log_op == "AND":
-        if any(s == EvaluationStatus.FAIL for s in statuses):
+        # Any FAIL -> Overall FAIL
+        if any(st == EvaluationStatus.FAIL for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.FAIL
-        elif any(s == EvaluationStatus.INSUFFICIENT_DATA for s in statuses):
+        elif any(st == EvaluationStatus.INSUFFICIENT_DATA for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.INSUFFICIENT_DATA
-        elif any(s == EvaluationStatus.INDETERMINATE for s in statuses):
+        elif any(st == EvaluationStatus.INDETERMINATE for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.INDETERMINATE
-        elif all(s in (EvaluationStatus.PASS, EvaluationStatus.NOT_APPLICABLE) for s in statuses):
-            final_status = EvaluationStatus.PASS if any(s == EvaluationStatus.PASS for s in statuses) else EvaluationStatus.NOT_APPLICABLE
+        elif all(st == EvaluationStatus.PASS for st, _, _, _ in sub_results):
+            final_status = EvaluationStatus.PASS
+        elif any(st == EvaluationStatus.NOT_APPLICABLE for st, _, _, _ in sub_results):
+            final_status = EvaluationStatus.NOT_APPLICABLE
         else:
-            final_status = EvaluationStatus.FAIL
+            final_status = EvaluationStatus.INDETERMINATE
         combined_exp = " AND ".join(explanations)
         return (final_status, all_evidence, list(set(all_missing)), combined_exp)
 
-    # OR evaluation: at least one must PASS
     elif log_op == "OR":
-        if any(s == EvaluationStatus.PASS for s in statuses):
+        # Any PASS -> Overall PASS
+        if any(st == EvaluationStatus.PASS for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.PASS
-        elif all(s == EvaluationStatus.FAIL for s in statuses):
+        elif all(st == EvaluationStatus.FAIL for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.FAIL
-        elif any(s == EvaluationStatus.INSUFFICIENT_DATA for s in statuses):
+        elif any(st == EvaluationStatus.INSUFFICIENT_DATA for st, _, _, _ in sub_results):
             final_status = EvaluationStatus.INSUFFICIENT_DATA
         else:
             final_status = EvaluationStatus.INDETERMINATE
@@ -363,4 +456,3 @@ def evaluate_claims(
         results=results,
         summary_counts=summary_counts
     )
-

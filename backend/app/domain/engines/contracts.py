@@ -76,6 +76,10 @@ class NutrientObservationInput(BaseModel):
     Missing values are NEVER converted to zero.
     """
     nutrient_code: str = Field(..., description="Canonical nutrient slug (e.g. 'protein', 'sodium')")
+    measurement_basis: MeasurementBasis | None = Field(
+        ...,
+        description="Explicit measurement basis (PER_100G, PER_100ML, etc.) or explicit None if unresolved"
+    )
     per_100g_value: Optional[Decimal] = Field(None, description="Numeric value per 100g or 100ml")
     per_serving_value: Optional[Decimal] = Field(None, description="Numeric value per serving")
     unit: str = Field(..., description="Measurement unit (e.g. 'g', 'mg', 'kcal')")
@@ -169,4 +173,3 @@ class EngineBatchResult(BaseModel):
     food_form: str
     results: List[RuleEvaluationResult] = Field(default_factory=list)
     summary_counts: Dict[EvaluationStatus, int] = Field(default_factory=dict)
-

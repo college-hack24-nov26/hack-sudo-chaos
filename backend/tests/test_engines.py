@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), '..'
 
 from app.domain.engines.contracts import (
     FoodForm,
+    MeasurementBasis,
     NutrientDataStatus,
     EvaluationStatus,
     IngredientProcessingClass,
@@ -65,43 +66,43 @@ class TestDeterministicEngines(unittest.TestCase):
             serving_size_unit="g",
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("380.0"), per_serving_value=Decimal("114.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("380.0"), per_serving_value=Decimal("114.0"),
                     unit="kcal", data_status=NutrientDataStatus.PRESENT
                 ),
                 "protein": NutrientObservationInput(
-                    nutrient_code="protein", per_100g_value=Decimal("19.5"), per_serving_value=Decimal("5.85"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="protein", per_100g_value=Decimal("19.5"), per_serving_value=Decimal("5.85"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "carbohydrates": NutrientObservationInput(
-                    nutrient_code="carbohydrates", per_100g_value=Decimal("58.0"), per_serving_value=Decimal("17.4"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="carbohydrates", per_100g_value=Decimal("58.0"), per_serving_value=Decimal("17.4"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "total_sugars": NutrientObservationInput(
-                    nutrient_code="total_sugars", per_100g_value=Decimal("2.5"), per_serving_value=Decimal("0.75"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_sugars", per_100g_value=Decimal("2.5"), per_serving_value=Decimal("0.75"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
                     unit="g", data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "total_fat": NutrientObservationInput(
-                    nutrient_code="total_fat", per_100g_value=Decimal("5.2"), per_serving_value=Decimal("1.56"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_fat", per_100g_value=Decimal("5.2"), per_serving_value=Decimal("1.56"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=Decimal("0.8"), per_serving_value=Decimal("0.24"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="saturated_fat", per_100g_value=Decimal("0.8"), per_serving_value=Decimal("0.24"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), per_serving_value=Decimal("0.0"),
                     unit="g", data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "sodium": NutrientObservationInput(
-                    nutrient_code="sodium", per_100g_value=Decimal("12.0"), per_serving_value=Decimal("3.6"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="sodium", per_100g_value=Decimal("12.0"), per_serving_value=Decimal("3.6"),
                     unit="mg", data_status=NutrientDataStatus.PRESENT
                 ),
                 "dietary_fibre": NutrientObservationInput(
-                    nutrient_code="dietary_fibre", per_100g_value=Decimal("10.8"), per_serving_value=Decimal("3.24"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="dietary_fibre", per_100g_value=Decimal("10.8"), per_serving_value=Decimal("3.24"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
             }
@@ -131,11 +132,11 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("520.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("520.0"),
                     unit="kcal", data_status=NutrientDataStatus.PRESENT
                 ),
                 "total_fat": NutrientObservationInput(
-                    nutrient_code="total_fat", per_100g_value=Decimal("28.0"),
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_fat", per_100g_value=Decimal("28.0"),
                     unit="g", data_status=NutrientDataStatus.PRESENT
                 ),
                 # Missing: protein, carbohydrates, total_sugars, added_sugars, saturated_fat, trans_fat, sodium
@@ -159,15 +160,15 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.LIQUID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("900.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="energy", per_100g_value=Decimal("900.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.05"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="trans_fat", per_100g_value=Decimal("0.05"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=Decimal("0.65"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="saturated_fat", per_100g_value=Decimal("0.65"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
             },
@@ -188,15 +189,15 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("884.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("884.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.10"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="trans_fat", per_100g_value=Decimal("0.10"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=Decimal("35.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="saturated_fat", per_100g_value=Decimal("35.0"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
             },
@@ -215,11 +216,11 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.LIQUID,
             nutrients={
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=None, unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="saturated_fat", per_100g_value=None, unit="g",
                     data_status=NutrientDataStatus.NOT_DECLARED
                 ),
             },
@@ -239,15 +240,15 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.LIQUID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("900.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="energy", per_100g_value=Decimal("900.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "trans_fat": NutrientObservationInput(
-                    nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="trans_fat", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "saturated_fat": NutrientObservationInput(
-                    nutrient_code="saturated_fat", per_100g_value=Decimal("0.5"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="saturated_fat", per_100g_value=Decimal("0.5"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
             },
@@ -268,7 +269,7 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
             },
@@ -297,19 +298,19 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("52.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("52.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_sugars", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
                 "sodium": NutrientObservationInput(
-                    nutrient_code="sodium", per_100g_value=Decimal("1.0"), unit="mg",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="sodium", per_100g_value=Decimal("1.0"), unit="mg",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_fat": NutrientObservationInput(
-                    nutrient_code="added_fat", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_fat", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
             },
@@ -334,19 +335,19 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("530.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="energy", per_100g_value=Decimal("530.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("4.5"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_sugars", per_100g_value=Decimal("4.5"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "sodium": NutrientObservationInput(
-                    nutrient_code="sodium", per_100g_value=Decimal("750.0"), unit="mg",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="sodium", per_100g_value=Decimal("750.0"), unit="mg",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_fat": NutrientObservationInput(
-                    nutrient_code="added_fat", per_100g_value=Decimal("28.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="added_fat", per_100g_value=Decimal("28.0"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
             },
@@ -375,19 +376,19 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.LIQUID,
             nutrients={
                 "energy": NutrientObservationInput(
-                    nutrient_code="energy", per_100g_value=Decimal("44.0"), unit="kcal",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="energy", per_100g_value=Decimal("44.0"), unit="kcal",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_sugars": NutrientObservationInput(
-                    nutrient_code="added_sugars", per_100g_value=Decimal("10.6"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="added_sugars", per_100g_value=Decimal("10.6"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "sodium": NutrientObservationInput(
-                    nutrient_code="sodium", per_100g_value=Decimal("15.0"), unit="mg",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="sodium", per_100g_value=Decimal("15.0"), unit="mg",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 "added_fat": NutrientObservationInput(
-                    nutrient_code="added_fat", per_100g_value=Decimal("0.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100ML, nutrient_code="added_fat", per_100g_value=Decimal("0.0"), unit="g",
                     data_status=NutrientDataStatus.EXPLICITLY_ZERO
                 ),
             }
@@ -404,7 +405,7 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "total_fat": NutrientObservationInput(
-                    nutrient_code="total_fat", per_100g_value=Decimal("18.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="total_fat", per_100g_value=Decimal("18.0"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 ),
                 # added_fat is not provided
@@ -480,7 +481,7 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "protein": NutrientObservationInput(
-                    nutrient_code="protein", per_100g_value=Decimal("15.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="protein", per_100g_value=Decimal("15.0"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 )
             }
@@ -497,6 +498,7 @@ class TestDeterministicEngines(unittest.TestCase):
                         "nutrient_code": "protein",
                         "operator": "INVALID_OP",
                         "threshold_value": 5.0,
+                        "measurement_basis": "PER_100G",
                         "food_form": "solid"
                     }
                 ]
@@ -514,7 +516,7 @@ class TestDeterministicEngines(unittest.TestCase):
             food_form=FoodForm.SOLID,
             nutrients={
                 "protein": NutrientObservationInput(
-                    nutrient_code="protein", per_100g_value=Decimal("15.0"), unit="g",
+                    measurement_basis=MeasurementBasis.PER_100G, nutrient_code="protein", per_100g_value=Decimal("15.0"), unit="g",
                     data_status=NutrientDataStatus.PRESENT
                 )
             }
@@ -522,7 +524,7 @@ class TestDeterministicEngines(unittest.TestCase):
         # Construct tree with depth 7
         curr = {
             "type": "NUTRIENT_THRESHOLD", "nutrient_code": "protein",
-            "operator": "GTE", "threshold_value": 5.0, "food_form": "solid"
+            "operator": "GTE", "threshold_value": 5.0, "measurement_basis": "PER_100G", "food_form": "solid"
         }
         for _ in range(7):
             curr = {
