@@ -4,6 +4,7 @@ import '../../features/comparison/presentation/screens/product_comparison_screen
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/ingredients/presentation/screens/ingredient_details_screen.dart';
 import '../../features/product_details/presentation/screens/product_details_screen.dart';
+import '../../features/product_details/presentation/screens/incomplete_product_data_screen.dart';
 import '../../features/saved/presentation/screens/saved_products_screen.dart';
 import '../../features/scanner/presentation/screens/product_loading_screen.dart';
 import '../../features/scanner/presentation/screens/product_not_found_screen.dart';
@@ -23,6 +24,8 @@ class AppRoutes {
   static const String aiExplanation = '/ai-explanation';
   static const String productLoading = '/product-loading/:barcode';
   static const String productNotFound = '/product-not-found/:barcode';
+  static const String incompleteProductData = '/incomplete-product-data/:barcode';
+  static const String incompleteData = '/incomplete-data';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -106,6 +109,24 @@ final GoRouter appRouter = GoRouter(
         final barcode = state.pathParameters['barcode'] ?? '';
         return ProductLoadingScreen(barcode: barcode);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.incompleteProductData,
+      builder: (context, state) {
+        final barcode = state.pathParameters['barcode'] ?? '';
+        return IncompleteProductDataScreen(barcode: barcode);
+      },
+    ),
+    GoRoute(
+      path: '/product/:barcode/incomplete-data',
+      builder: (context, state) {
+        final barcode = state.pathParameters['barcode'] ?? '';
+        return IncompleteProductDataScreen(barcode: barcode);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.incompleteData,
+      builder: (context, state) => const IncompleteProductDataScreen(barcode: ''),
     ),
     GoRoute(
       path: AppRoutes.productNotFound,

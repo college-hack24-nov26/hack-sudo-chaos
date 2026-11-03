@@ -70,7 +70,11 @@ class _ProductLoadingScreenState extends ConsumerState<ProductLoadingScreen> {
       setState(() => _stage = LoadingStage.completed);
 
       // Navigate to product details screen
-      context.replace('/product/$barcode');
+      if (productDetails.hasIncompleteData) {
+        context.replace('/product/$barcode/incomplete-data');
+      } else {
+        context.replace('/product/$barcode');
+      }
     } on ProductNotFoundException {
       if (_isCancelled || !mounted) return;
       context.replace('/product-not-found/$barcode');

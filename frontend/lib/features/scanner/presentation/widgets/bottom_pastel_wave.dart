@@ -5,10 +5,10 @@ class BottomPastelWave extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return const SizedBox(
       height: 115.0,
       width: double.infinity,
-      child: const CustomPaint(
+      child: CustomPaint(
         painter: _PastelWavePainter(),
       ),
     );

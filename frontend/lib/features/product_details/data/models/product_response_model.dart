@@ -15,6 +15,160 @@ class ProductDetailsResponse {
     this.aiExplanation,
   });
 
+  // =========================================================================
+  // Completeness & Incomplete Data Evaluation
+  // =========================================================================
+
+  bool get isProductDetailsAvailable {
+    return product.productName.trim().isNotEmpty &&
+        (product.brandName != null ||
+            product.foodCategory != null ||
+            product.packageSize != null ||
+            product.hasServingInfo);
+  }
+
+  bool _isNutrientAvailable(List<String> codes) {
+    final list = nutritionalInterpretation?.nutrients;
+    if (list == null || list.isEmpty) return false;
+    for (final item in list) {
+      final code = item.nutrientCode.toLowerCase();
+      final name = item.displayName.toLowerCase();
+      if (codes.any((c) => code == c || name.contains(c))) {
+        if (item.status == 'EXPLICITLY_ZERO') return true;
+        if (item.status == 'NOT_DECLARED' || item.status == 'UNKNOWN') return false;
+        return item.valuePer100g != null || item.valuePerServing != null;
+      }
+    }
+    return false;
+  }
+
+  bool _hasNutrientEntry(List<String> codes) {
+    final list = nutritionalInterpretation?.nutrients;
+    if (list == null || list.isEmpty) return false;
+    for (final item in list) {
+      final code = item.nutrientCode.toLowerCase();
+      final name = item.displayName.toLowerCase();
+      if (codes.any((c) => code == c || name.contains(c))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool get isEnergyAvailable => _isNutrientAvailable(const ['energy', 'calories', 'energy_kcal']);
+  bool get isTotalFatAvailable => _isNutrientAvailable(const ['total_fat', 'fat']);
+  bool get isSodiumAvailable => _isNutrientAvailable(const ['sodium', 'salt']);
+  bool get isProteinAvailable => _isNutrientAvailable(const ['protein']);
+  bool get isAddedSugarAvailable => _isNutrientAvailable(const ['added_sugars', 'added_sugar', 'sugars']);
+  bool get isCarbohydratesAvailable => _isNutrientAvailable(const ['carbohydrates', 'carbohydrate', 'carbs']);
+  bool get isIngredientsDetailedAvailable {
+    final ing = ingredientAnalysis;
+    if (ing == null) return false;
+    if (ing.ingredientsSummary != null && ing.ingredientsSummary!.trim().isNotEmpty) return true;
+    if (ing.categories.isNotEmpty) return true;
+    if (ing.totalIngredientsCount > 0) return true;
+    return false;
+  }
+
+  List<ProductDataFieldStatus> get completenessEvaluation {
+    return [
+      ProductDataFieldStatus(
+        label: 'Product details',
+        isAvailable: isProductDetailsAvailable,
+      ),
+      ProductDataFieldStatus(
+        label: 'Energy (Calories)',
+        isAvailable: isEnergyAvailable,
+      ),
+      ProductDataFieldStatus(
+        label: 'Total Fat',
+        isAvailable: isTotalFatAvailable,
+      ),
+      ProductDataFieldStatus(
+        label: 'Sodium',
+        isAvailable: isSodiumAvailable,
+      ),
+      if (isCarbohydratesAvailable)
+        const ProductDataFieldStatus(
+          label: 'Carbohydrates',
+          isAvailable: true,
+        ),
+      ProductDataFieldStatus(
+        label: 'Protein',
+        isAvailable: isProteinAvailable,
+      ),
+      ProductDataFieldStatus(
+        label: 'Added Sugar',
+        isAvailable: isAddedSugarAvailable,
+      ),
+      if (!isCarbohydratesAvailable && _hasNutrientEntry(const ['carbohydrates', 'carbohydrate', 'carbs']))
+        const ProductDataFieldStatus(
+          label: 'Carbohydrates',
+          isAvailable: false,
+        ),
+      ProductDataFieldStatus(
+        label: 'Ingredients (Detailed)',
+        isAvailable: isIngredientsDetailedAvailable,
+      ),
+    ];
+  }
+
+  List<String> get availableFields =>
+      completenessEvaluation.where((f) => f.isAvailable).map((f) => f.label).toList();
+
+  List<String> get missingFields =>
+      completenessEvaluation.where((f) => !f.isAvailable).map((f) => f.label).toList();
+
+  bool get hasIncompleteData => missingFields.isNotEmpty;
+
+  static ProductDetailsResponse get demoIncompleteLays => const ProductDetailsResponse(
+        product: ProductIdentity(
+          barcode: '8901491101837',
+          productName: "Lay's Classic",
+          brandName: "Lay's",
+          foodCategory: 'Potato Chips',
+          packageSize: '100 g',
+          foodForm: 'solid',
+        ),
+        nutritionalInterpretation: NutritionalInterpretation(
+          nutrients: [
+            NutrientItem(
+              nutrientCode: 'energy',
+              displayName: 'Energy',
+              valuePer100g: 544.0,
+              unit: 'kcal',
+              status: 'PRESENT',
+            ),
+            NutrientItem(
+              nutrientCode: 'total_fat',
+              displayName: 'Total Fat',
+              valuePer100g: 34.0,
+              unit: 'g',
+              status: 'PRESENT',
+            ),
+            NutrientItem(
+              nutrientCode: 'sodium',
+              displayName: 'Sodium',
+              valuePer100g: 550.0,
+              unit: 'mg',
+              status: 'PRESENT',
+            ),
+            NutrientItem(
+              nutrientCode: 'protein',
+              displayName: 'Protein',
+              status: 'NOT_DECLARED',
+              unit: 'g',
+            ),
+            NutrientItem(
+              nutrientCode: 'added_sugars',
+              displayName: 'Added Sugar',
+              status: 'NOT_DECLARED',
+              unit: 'g',
+            ),
+          ],
+        ),
+      );
+
   factory ProductDetailsResponse.fromJson(Map<String, dynamic> json) {
     return ProductDetailsResponse(
       product: ProductIdentity.fromJson(json['product'] as Map<String, dynamic>? ?? {}),
@@ -335,3 +489,14 @@ class AiExplanation {
   }
 }
 
+
+
+class ProductDataFieldStatus {
+  final String label;
+  final bool isAvailable;
+
+  const ProductDataFieldStatus({
+    required this.label,
+    required this.isAvailable,
+  });
+}

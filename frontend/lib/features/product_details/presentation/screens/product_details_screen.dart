@@ -81,6 +81,68 @@ class ProductDetailsScreen extends ConsumerWidget {
                   product: product,
                   isFssaiCompliant: details.regulatoryClaimsValidation?.isFssaiCompliant,
                 ),
+                if (details.hasIncompleteData) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  GestureDetector(
+                    onTap: () {
+                      context.push('/product/$barcode/incomplete-data');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFDF1DC), Color(0xFFFAE7C8)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: const Color(0xFFFFF8EE), width: 1.2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x088A5A1E),
+                            blurRadius: 8.0,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28.0,
+                            height: 28.0,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF7D9A8),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.info_outline_rounded,
+                              size: 18.0,
+                              color: Color(0xFF6E430C),
+                            ),
+                          ),
+                          const SizedBox(width: 10.0),
+                          const Expanded(
+                            child: Text(
+                              'Some information is not available for this product',
+                              style: TextStyle(
+                                fontFamily: 'Manrope',
+                                fontSize: 13.0,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF573812),
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20.0,
+                            color: Color(0xFF8A5A1E),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
 
                 // Section 2: Measurement Selector (Per 100g vs Per Serving)

@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../app/router/app_router.dart';
-import '../../../../core/network/api_exceptions.dart';
-import '../../../product_details/presentation/providers/product_details_provider.dart';
 import '../widgets/barcode_lookup_feedback_dialog.dart';
 import '../widgets/manual_barcode_modal.dart';
 import '../widgets/scanner_bottom_sheet_panel.dart';
@@ -103,7 +101,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
 
     // Navigate to dedicated ProductLoadingScreen which executes real backend lookup with stage progression
     if (mounted) {
-      await context.push('/product-loading/' + barcode);
+      await context.push('/product-loading/$barcode');
       _isProcessing = false;
     }
   }
