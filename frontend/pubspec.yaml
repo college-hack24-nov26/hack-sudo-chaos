@@ -1,0 +1,46 @@
+name: yumsure
+description: "YumSure - Indian Packaged-Food Nutrition Intelligence Application"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  dio: ^5.4.3+1
+  intl: ^0.19.0
+  flutter_svg: ^2.0.10+1
+
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/images/
+    - assets/images/categories/
+    - assets/backgrounds/
+    - assets/illustrations/
+    - assets/icons/
+    - assets/fonts/manrope/
+
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/manrope/Manrope-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/manrope/Manrope-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/manrope/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/manrope/Manrope-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/manrope/Manrope-ExtraBold.ttf
+          weight: 800
+

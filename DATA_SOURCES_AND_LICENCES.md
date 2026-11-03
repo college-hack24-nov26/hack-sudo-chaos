@@ -95,3 +95,62 @@ flowchart TD
   - Zero code borrowing or decompilation of proprietary binaries.
   - Zero runtime dependencies on third-party infrastructure.
 
+---
+
+## 6. Category Photography Assets (Public Domain & Unsplash License)
+
+To maintain authentic culinary representation matching the design specifications, category tiles utilize verified, single-subject studio food photography:
+
+| Category | Local Asset Path | Subject & Studio Setup | Source / Photographer | License |
+| :--- | :--- | :--- | :--- | :--- |
+| **Snacks** | `assets/images/categories/snacks.webp` | Golden crispy potato chips, close-up food photography with warm golden tones | [Evan-Amos](https://commons.wikimedia.org/wiki/File:Potato-Chips.jpg) | Public Domain (CC0) |
+| **Beverages** | `assets/images/categories/beverages.webp` | Clear glass with dark amber cola being poured over ice cubes against light background | [Slashio Photography](https://images.unsplash.com/photo-1552879574-e1a9ae64c38a) | Unsplash License |
+| **Biscuits** | `assets/images/categories/biscuits.webp` | Round golden-brown chocolate chip cookies arranged on warm studio surface | [Evan-Amos](https://commons.wikimedia.org/wiki/File:Choc-Chip-Cookie.png) | Public Domain (CC0) |
+| **Dairy** | `assets/images/categories/dairy.webp` | White milk streaming into a clear glass jar against a minimalist pale background | [NordWood Themes](https://images.unsplash.com/photo-1528750997573-59b89d56f4f7) | Unsplash License |
+
+---
+
+## 7. Bundled Typography: Manrope (SIL Open Font License 1.1)
+
+- **Font Family**: Manrope
+- **Designer / Custodian**: Mikhail Sharanda, Mirko Velimirovic
+- **License**: **SIL Open Font License (OFL) Version 1.1**
+- **Repository**: `https://github.com/google/fonts/tree/main/ofl/manrope`
+- **Permitted Uses**: Free of charge to use, study, copy, merge, embed, and redistribute with software.
+- **Bundled Files**:
+  - `assets/fonts/manrope/Manrope-Regular.ttf` (Weight 400)
+  - `assets/fonts/manrope/Manrope-Medium.ttf` (Weight 500)
+  - `assets/fonts/manrope/Manrope-SemiBold.ttf` (Weight 600)
+  - `assets/fonts/manrope/Manrope-Bold.ttf` (Weight 700)
+  - `assets/fonts/manrope/Manrope-ExtraBold.ttf` (Weight 800)
+
+---
+
+## 8. Brand Identity & Vector Logo Provenance
+
+The YumSure brand assets were reconstructed as an original, standalone vector identity matching the visual character of the approved UI references:
+
+| Property | Specification |
+| :--- | :--- |
+| **Wordmark Text** | `YumSure` (Capital Y and S, dark near-black `#16141A`) |
+| **Typography Source** | **Manrope ExtraBold (Weight 800)** from Google Fonts (`https://fonts.google.com/specimen/Manrope`) |
+| **Typography Licence** | **SIL Open Font License (OFL) Version 1.1** (`https://openfontlicense.org/`) |
+| **Vector Geometry** | Outlined Bezier `<path>` glyphs generated directly from font metrics via `fontTools`, completely independent of device-installed fonts |
+| **Smile Artwork** | Original custom Bezier arc in YumSure signature orange (`#FE873E`), stroke width 2.3 with smooth rounded caps (`stroke-linecap="round"`), integrated directly below the wordmark under the `m` and `S` baseline (relative X range: 0.49 to 0.64) |
+| **Asset Files** | `assets/images/yumsure_logo.svg` (primary scalable vector asset) |
+| **Copyright Compliance** | Zero third-party logos copied; zero unverified internet assets; 100% original typographic and vector artwork |
+
+---
+
+## 9. Background & Illustration Artwork Ledger
+
+All decorative backgrounds and interface illustrations are original assets created specifically for YumSure to eliminate third-party dependencies and real-time GPU blur penalties:
+
+| Asset Name | Local File Path | Format & Dimensions | Authorship & License |
+| :--- | :--- | :--- | :--- |
+| **Home Aurora Background (WebP)** | `assets/backgrounds/home_bg.webp` | WebP (780 × 1600 px, 16.2 KB) | Original artwork for YumSure (MIT License) |
+| **Barcode Hero Illustration** | `assets/illustrations/barcode_bracket.svg` | SVG (60 × 40 px, 0.9 KB) | Original artwork for YumSure (MIT License) — 4 separate corner brackets with 6 vertical barcode stripes |
+
+
+
+

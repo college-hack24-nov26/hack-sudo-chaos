@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390.0 844.0" width="390.0" height="844.0">
+  <defs>
+    <!-- Base Warm Ivory Gradient -->
+    <linearGradient id="ivory_base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF4EF" />
+      <stop offset="100%" stop-color="#F8F2EB" />
+    </linearGradient>
+
+    <!-- Top-Right Diagonal Lavender Gradient -->
+    <linearGradient id="lavender_plane" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D6C8F4" stop-opacity="0.75" />
+      <stop offset="45%" stop-color="#E8DEF8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#E8DEF8" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Midground Diagonal Wave Gradient -->
+    <linearGradient id="mid_wave" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE8DC" stop-opacity="0.55" />
+      <stop offset="60%" stop-color="#EFE8FC" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FAF4EF" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Left Peach/Orange Spherical Illumination -->
+    <radialGradient id="peach_orb" cx="10%" cy="22%" r="42%" fx="8%" fy="20%">
+      <stop offset="0%" stop-color="#FE873E" stop-opacity="0.85" />
+      <stop offset="45%" stop-color="#FFA570" stop-opacity="0.50" />
+      <stop offset="75%" stop-color="#FFCCA8" stop-opacity="0.20" />
+      <stop offset="100%" stop-color="#FAF4EF" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Mid-Left Secondary Amber Glow -->
+    <radialGradient id="amber_glow" cx="0%" cy="45%" r="35%">
+      <stop offset="0%" stop-color="#FFB86C" stop-opacity="0.38" />
+      <stop offset="70%" stop-color="#FFD8A8" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FAF4EF" stop-opacity="0.0" />
+    </radialGradient>
+  </defs>
+
+  <!-- 1. Canvas Base: Warm Ivory -->
+  <rect width="390.0" height="844.0" fill="url(#ivory_base)" />
+
+  <!-- 2. Diagonal Lavender Geometric Surface (Upper-Right) -->
+  <path d="M 140 0 L 390 0 L 390 340 C 330 280, 220 140, 140 0 Z" fill="url(#lavender_plane)" />
+
+  <!-- 3. Midground Diagonal Wave Surface -->
+  <path d="M 0 80 C 150 110, 280 200, 390 240 L 390 380 C 200 340, 80 260, 0 220 Z" fill="url(#mid_wave)" />
+
+  <!-- 4. Upper-Left Peach/Orange Illumination Orb -->
+  <circle cx="30" cy="185" r="165" fill="url(#peach_orb)" />
+
+  <!-- 5. Mid-Left Secondary Amber Glow -->
+  <circle cx="-10" cy="380" r="140" fill="url(#amber_glow)" />
+</svg>
