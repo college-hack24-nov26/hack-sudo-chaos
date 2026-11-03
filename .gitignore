@@ -1,6 +1,7 @@
 # Python
 venv/
 .venv/
+backend/venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -26,7 +27,10 @@ wheels/
 # Environment
 .env
 .env.*
+backend/.env
+backend/.env.*
 !.env.example
+!backend/.env.example
 
 # Flutter / Dart
 .dart_tool/
