@@ -1,0 +1,46 @@
+{
+  "TRANS_FAT_FREE": [
+    "Zero Trans Fat",
+    "No Trans Fat",
+    "Trans Fatty Acid Free",
+    "Free of Trans Fat"
+  ],
+  "LOW_SATURATED_FAT": [
+    "Low in Saturated Fat",
+    "Little Saturated Fat"
+  ],
+  "SOURCE_OF_PROTEIN": [
+    "Provides Protein",
+    "With Protein",
+    "Contains Protein"
+  ],
+  "HIGH_PROTEIN": [
+    "Rich in Protein",
+    "Protein Rich",
+    "Excellent Source of Protein"
+  ],
+  "SOURCE_OF_DIETARY_FIBRE": [
+    "Provides Fibre",
+    "Contains Fibre",
+    "With Fibre"
+  ],
+  "HIGH_DIETARY_FIBRE": [
+    "Rich in Fibre",
+    "Excellent Source of Fibre"
+  ],
+  "LOW_SUGARS": [
+    "Low Sugar",
+    "Little Sugar"
+  ],
+  "NO_ADDED_SUGARS": [
+    "No Added Sugar",
+    "Without Added Sugar",
+    "Zero Added Sugar"
+  ],
+  "LOW_SODIUM": [
+    "Low in Sodium",
+    "Low Salt",
+    "Little Salt"
+  ]
+}
+

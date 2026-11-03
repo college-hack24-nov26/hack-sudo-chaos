@@ -1,0 +1,533 @@
+[
+  {
+    "claim_id": "fssai_claim_trans_fat_free_solid",
+    "claim_code": "TRANS_FAT_FREE",
+    "claim_title": "Trans Fat Free (Solids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "solid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "trans_fat",
+          "operator": "LT",
+          "threshold_value": 0.2,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 1.5,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        },
+        {
+          "type": "ENERGY_PERCENTAGE",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 10.0,
+          "measurement_basis": "PCT_TOTAL_ENERGY"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Zero Trans Fat",
+      "No Trans Fat",
+      "Trans Fatty Acid Free",
+      "Free of Trans Fat"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains strictly less than 0.2g trans fat per 100g, and saturated fat not exceeding 1.5g/100g and 10% of total energy."
+  },
+  {
+    "claim_id": "fssai_claim_trans_fat_free_liquid",
+    "claim_code": "TRANS_FAT_FREE",
+    "claim_title": "Trans Fat Free (Liquids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "liquid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "trans_fat",
+          "operator": "LT",
+          "threshold_value": 0.2,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 0.75,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        },
+        {
+          "type": "ENERGY_PERCENTAGE",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 10.0,
+          "measurement_basis": "PCT_TOTAL_ENERGY"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Zero Trans Fat",
+      "No Trans Fat",
+      "Trans Fatty Acid Free"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains strictly less than 0.2g trans fat per 100ml, and saturated fat not exceeding 0.75g/100ml and 10% of total energy."
+  },
+  {
+    "claim_id": "fssai_claim_low_saturated_fat_solid",
+    "claim_code": "LOW_SATURATED_FAT",
+    "claim_title": "Low Saturated Fat (Solids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "solid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 1.5,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        },
+        {
+          "type": "ENERGY_PERCENTAGE",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 10.0,
+          "measurement_basis": "PCT_TOTAL_ENERGY"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Low in Saturated Fat",
+      "Little Saturated Fat"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(c)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains saturated fat not exceeding 1.5g per 100g and not more than 10% of total energy."
+  },
+  {
+    "claim_id": "fssai_claim_low_saturated_fat_liquid",
+    "claim_code": "LOW_SATURATED_FAT",
+    "claim_title": "Low Saturated Fat (Liquids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "liquid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 0.75,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        },
+        {
+          "type": "ENERGY_PERCENTAGE",
+          "nutrient_code": "saturated_fat",
+          "operator": "LTE",
+          "threshold_value": 10.0,
+          "measurement_basis": "PCT_TOTAL_ENERGY"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Low in Saturated Fat",
+      "Little Saturated Fat"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 4(c)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains saturated fat not exceeding 0.75g per 100ml and not more than 10% of total energy."
+  },
+  {
+    "claim_id": "fssai_claim_source_of_protein_solid",
+    "claim_code": "SOURCE_OF_PROTEIN",
+    "claim_title": "Source of Protein (Solids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "solid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 5.4,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 2.7,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Provides Protein",
+      "With Protein",
+      "Contains Protein"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 5(a)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 5.4g protein per 100g (10% of 54g RDI) or 2.7g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_source_of_protein_liquid",
+    "claim_code": "SOURCE_OF_PROTEIN",
+    "claim_title": "Source of Protein (Liquids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "liquid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 2.7,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 2.7,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Provides Protein",
+      "With Protein",
+      "Contains Protein"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 5(a)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 2.7g protein per 100ml (5% of 54g RDI) or 2.7g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_high_protein_solid",
+    "claim_code": "HIGH_PROTEIN",
+    "claim_title": "High Protein (Solids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "solid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 10.8,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 5.4,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Rich in Protein",
+      "Protein Rich",
+      "Excellent Source of Protein"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 5(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 10.8g protein per 100g (20% of 54g RDI) or 5.4g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_high_protein_liquid",
+    "claim_code": "HIGH_PROTEIN",
+    "claim_title": "High Protein (Liquids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "liquid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 5.4,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "protein",
+          "operator": "GTE",
+          "threshold_value": 5.4,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Rich in Protein",
+      "Protein Rich",
+      "Excellent Source of Protein"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 5(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 5.4g protein per 100ml (10% of 54g RDI) or 5.4g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_source_of_dietary_fibre",
+    "claim_code": "SOURCE_OF_DIETARY_FIBRE",
+    "claim_title": "Source of Dietary Fibre",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "both",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "dietary_fibre",
+          "operator": "GTE",
+          "threshold_value": 3.0,
+          "measurement_basis": "PER_100G",
+          "food_form": "both"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "dietary_fibre",
+          "operator": "GTE",
+          "threshold_value": 1.5,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Provides Fibre",
+      "Contains Fibre",
+      "With Fibre"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 6(a)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 3.0g dietary fibre per 100g or 1.5g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_high_dietary_fibre",
+    "claim_code": "HIGH_DIETARY_FIBRE",
+    "claim_title": "High Dietary Fibre",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "both",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "OR",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "dietary_fibre",
+          "operator": "GTE",
+          "threshold_value": 6.0,
+          "measurement_basis": "PER_100G",
+          "food_form": "both"
+        },
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "dietary_fibre",
+          "operator": "GTE",
+          "threshold_value": 3.0,
+          "measurement_basis": "PER_100KCAL",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Rich in Fibre",
+      "Excellent Source of Fibre"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 6(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains not less than 6.0g dietary fibre per 100g or 3.0g per 100 kcal."
+  },
+  {
+    "claim_id": "fssai_claim_low_sugars_solid",
+    "claim_code": "LOW_SUGARS",
+    "claim_title": "Low Sugars (Solids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "solid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "total_sugars",
+          "operator": "LTE",
+          "threshold_value": 5.0,
+          "measurement_basis": "PER_100G",
+          "food_form": "solid"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Low Sugar",
+      "Little Sugar"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 3(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains total sugars not exceeding 5.0g per 100g."
+  },
+  {
+    "claim_id": "fssai_claim_low_sugars_liquid",
+    "claim_code": "LOW_SUGARS",
+    "claim_title": "Low Sugars (Liquids)",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "liquid",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "total_sugars",
+          "operator": "LTE",
+          "threshold_value": 2.5,
+          "measurement_basis": "PER_100ML",
+          "food_form": "liquid"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Low Sugar",
+      "Little Sugar"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 3(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains total sugars not exceeding 2.5g per 100ml."
+  },
+  {
+    "claim_id": "fssai_claim_no_added_sugars",
+    "claim_code": "NO_ADDED_SUGARS",
+    "claim_title": "No Added Sugars",
+    "claim_family": "NON_ADDITION_CLAIM",
+    "food_form": "both",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "added_sugars",
+          "operator": "LTE",
+          "threshold_value": 0.0,
+          "measurement_basis": "PER_100G",
+          "food_form": "both"
+        },
+        {
+          "type": "INGREDIENT_CHECK",
+          "ingredient_criteria": {
+            "disallowed_sugar_classes": ["ADDED_FREE_SUGAR", "SUGAR_SUBSTITUTE_SWEETENER"],
+            "allow_intrinsic_sugars": true,
+            "mandatory_disclosure_required": "CONTAINS NATURALLY OCCURRING SUGARS"
+          }
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "No Added Sugar",
+      "Without Added Sugar",
+      "Zero Added Sugar"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Regulation 6(1) & Schedule II",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains zero added sugars, no ingredients replacing sugar sweetness, and requires 'CONTAINS NATURALLY OCCURRING SUGARS' disclosure if natural sugars are present."
+  },
+  {
+    "claim_id": "fssai_claim_low_sodium",
+    "claim_code": "LOW_SODIUM",
+    "claim_title": "Low Sodium / Low Salt",
+    "claim_family": "NUTRIENT_CONTENT_CLAIM",
+    "food_form": "both",
+    "applicable_category": "ALL",
+    "condition_expression": {
+      "logical_operator": "AND",
+      "conditions": [
+        {
+          "type": "NUTRIENT_THRESHOLD",
+          "nutrient_code": "sodium",
+          "operator": "LTE",
+          "threshold_value": 120.0,
+          "measurement_basis": "PER_100G",
+          "food_form": "both"
+        }
+      ]
+    },
+    "permitted_synonyms_schedule_ii": [
+      "Low in Sodium",
+      "Low Salt",
+      "Little Salt"
+    ],
+    "fssai_regulation_reference": "FSSAI (Advertising and Claims) Regulations 2018, Schedule I, Entry 7(b)",
+    "official_source_version": "Version III (04-10-2022)",
+    "effective_from": "2019-07-01",
+    "is_active": true,
+    "consumer_explanation": "Contains sodium not exceeding 120mg per 100g (equivalent to 0.3g salt per 100g)."
+  }
+]
+

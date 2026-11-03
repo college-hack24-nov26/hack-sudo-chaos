@@ -1,0 +1,69 @@
+[
+  {
+    "ingredient_code": "ins_951_aspartame",
+    "canonical_name": "Aspartame",
+    "ins_number": "951",
+    "category": "SWEETENER",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Non-nutritive intense artificial sweetener, 200x sucrose potency.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "NON_NUTRITIVE_SWEETENER",
+    "classification_evidence": "JECFA Evaluation; FSSAI Labelling Schedule II Entry 1"
+  },
+  {
+    "ingredient_code": "ins_965_maltitol",
+    "canonical_name": "Maltitol",
+    "ins_number": "965",
+    "category": "SWEETENER",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Polyol sugar alcohol sweetener with bulk sweetening properties.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "POLYOL",
+    "classification_evidence": "FSSAI Labelling Schedule II Entry 4"
+  },
+  {
+    "ingredient_code": "ins_420_sorbitol",
+    "canonical_name": "Sorbitol",
+    "ins_number": "420",
+    "category": "SWEETENER",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Polyol sugar alcohol humectant and sweetener.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "POLYOL",
+    "classification_evidence": "FSSAI Labelling Schedule II Entry 4"
+  },
+  {
+    "ingredient_code": "caffeine",
+    "canonical_name": "Caffeine",
+    "ins_number": null,
+    "category": "OTHER",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Central nervous system stimulant used in energy beverages.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "NOT_SUGAR",
+    "classification_evidence": "FSSAI Food Additives Regulations 2011 Appendix A Table 3"
+  },
+  {
+    "ingredient_code": "ins_211_sodium_benzoate",
+    "canonical_name": "Sodium Benzoate",
+    "ins_number": "211",
+    "category": "PRESERVATIVE",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Chemical antimicrobial preservative active against yeasts and bacteria in acidic foods.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "NOT_SUGAR",
+    "classification_evidence": "FSSAI Additives 2011 Appendix A Table 3"
+  },
+  {
+    "ingredient_code": "ins_202_potassium_sorbate",
+    "canonical_name": "Potassium Sorbate",
+    "ins_number": "202",
+    "category": "PRESERVATIVE",
+    "is_fssai_major_allergen": false,
+    "functional_description": "Chemical preservative against moulds and yeasts in foods.",
+    "processing_classification": "FUNCTIONAL_ADDITIVE",
+    "sugar_classification": "NOT_SUGAR",
+    "classification_evidence": "FSSAI Additives 2011 Appendix A Table 3"
+  }
+]
+

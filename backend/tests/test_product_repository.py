@@ -36,12 +36,16 @@ class TestProductRepository(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Open a dedicated connection for testing
-        cls.connection = engine.connect()
+        try:
+            cls.connection = engine.connect()
+        except Exception as e:
+            raise unittest.SkipTest(f'Live PostgreSQL database not reachable: {e}')
 
     @classmethod
     def tearDownClass(cls):
         # Close connection
-        cls.connection.close()
+        if hasattr(cls, 'connection') and cls.connection:
+            cls.connection.close()
 
     def setUp(self):
         # Begin an atomic transaction for each test

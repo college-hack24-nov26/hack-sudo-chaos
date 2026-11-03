@@ -1,0 +1,69 @@
+[
+  {
+    "rule_id": "ir_aspartame_pku_warning",
+    "ingredient_code": "ins_951_aspartame",
+    "rule_type": "MANDATORY_LABEL_WARNING",
+    "target_food_category": "ALL",
+    "max_permitted_ppm": null,
+    "warning_statement": "CONTAINS ASPARTAME. NOT RECOMMENDED FOR PHENYLKETONURICS.",
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Labelling and Display) Regulations 2020, Schedule II, Entry 1",
+    "consumer_guidance": "Aspartame metabolizes into phenylalanine. Phenylketonurics (individuals with PKU) must avoid."
+  },
+  {
+    "rule_id": "ir_maltitol_laxative_warning",
+    "ingredient_code": "ins_965_maltitol",
+    "rule_type": "MANDATORY_LABEL_WARNING",
+    "target_food_category": "ALL",
+    "max_permitted_ppm": null,
+    "warning_statement": "Polyols may produce laxative effects.",
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Labelling and Display) Regulations 2020, Schedule II, Entry 4",
+    "consumer_guidance": "Polyol sweeteners may cause gastrointestinal discomfort or laxative effects when consumed in large quantities."
+  },
+  {
+    "rule_id": "ir_sorbitol_laxative_warning",
+    "ingredient_code": "ins_420_sorbitol",
+    "rule_type": "MANDATORY_LABEL_WARNING",
+    "target_food_category": "ALL",
+    "max_permitted_ppm": null,
+    "warning_statement": "Polyols may produce laxative effects.",
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Labelling and Display) Regulations 2020, Schedule II, Entry 4",
+    "consumer_guidance": "Polyol sweeteners may cause gastrointestinal discomfort or laxative effects."
+  },
+  {
+    "rule_id": "ir_caffeine_warning",
+    "ingredient_code": "caffeine",
+    "rule_type": "MANDATORY_LABEL_WARNING",
+    "target_food_category": "BEVERAGE",
+    "max_permitted_ppm": 300.0,
+    "warning_statement": "CONTAINS CAFFEINE. Not recommended for children, pregnant or lactating women.",
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Food Products Standards and Food Additives) Regulations 2011, Appendix A Table 3",
+    "consumer_guidance": "Caffeine in energy drinks / caffeinated beverages requires prominent population advisory."
+  },
+  {
+    "rule_id": "ir_sodium_benzoate_max_limit_beverages",
+    "ingredient_code": "ins_211_sodium_benzoate",
+    "rule_type": "MAX_PERMISSIBLE_LIMIT",
+    "target_food_category": "BEVERAGE",
+    "max_permitted_ppm": 120.0,
+    "warning_statement": null,
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Food Products Standards and Food Additives) Regulations 2011, Appendix A Table 3",
+    "consumer_guidance": "Preservative limited to a maximum of 120 ppm in water-based flavoured drinks."
+  },
+  {
+    "rule_id": "ir_potassium_sorbate_max_limit_confectionery",
+    "ingredient_code": "ins_202_potassium_sorbate",
+    "rule_type": "MAX_PERMISSIBLE_LIMIT",
+    "target_food_category": "CONFECTIONERY",
+    "max_permitted_ppm": 1000.0,
+    "warning_statement": null,
+    "condition_expression": null,
+    "regulatory_reference": "FSSAI (Food Products Standards and Food Additives) Regulations 2011, Appendix A Table 3",
+    "consumer_guidance": "Sorbate preservative limited to 1,000 ppm in flour confectionery and frostings."
+  }
+]
+

@@ -1,0 +1,91 @@
+[
+  {
+    "nutrient_code": "energy",
+    "display_name": "Energy",
+    "standard_unit": "kcal",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 2000.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "protein",
+    "display_name": "Protein",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 54.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "carbohydrates",
+    "display_name": "Carbohydrates",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 300.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "total_sugars",
+    "display_name": "Total Sugars",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": null,
+    "rdi_citation": null
+  },
+  {
+    "nutrient_code": "added_sugars",
+    "display_name": "Added Sugars",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 50.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "total_fat",
+    "display_name": "Total Fat",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 67.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "saturated_fat",
+    "display_name": "Saturated Fat",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 22.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "trans_fat",
+    "display_name": "Trans Fat",
+    "standard_unit": "g",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 2.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "sodium",
+    "display_name": "Sodium",
+    "standard_unit": "mg",
+    "is_fssai_mandatory": true,
+    "fssai_standard_daily_rdi": 2000.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "dietary_fibre",
+    "display_name": "Dietary Fibre",
+    "standard_unit": "g",
+    "is_fssai_mandatory": false,
+    "fssai_standard_daily_rdi": 30.0,
+    "rdi_citation": "FSSAI (Labelling and Display) Regulations 2020, Reg 5(3)(b)"
+  },
+  {
+    "nutrient_code": "added_fat",
+    "display_name": "Added Fat",
+    "standard_unit": "g",
+    "is_fssai_mandatory": false,
+    "fssai_standard_daily_rdi": 25.0,
+    "rdi_citation": "ICMR-NIN DGI 2024 Reference"
+  }
+]
+
