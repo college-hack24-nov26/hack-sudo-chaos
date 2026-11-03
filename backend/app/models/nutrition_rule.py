@@ -1,4 +1,15 @@
-"""Nutrition interpretation rules model for YumSure."""
+"""
+[DEPRECATED] Nutrition interpretation rules model for YumSure.
+
+NOTE FOR DEVELOPERS & ARCHITECTS:
+This model and table (`nutrition_interpretation_rules`) are DEPRECATED.
+They previously represented an unverified Low/Moderate/High tripartite classification.
+Per the Phase 1A & Phase 1B audit, Indian statutory law contains no tripartite thresholds.
+This model is superseded by `IcmrHfssRule` (`icmr_hfss_rules`) which strictly models
+the ICMR-NIN Dietary Guidelines for Indians 2024 (Tables 15.1 and 15.2) matrix.
+
+This class is retained strictly for backward compatibility and safe migration rollbacks.
+"""
 
 from decimal import Decimal
 from typing import Optional
@@ -12,10 +23,10 @@ from app.db.base import Base
 
 class NutritionRule(Base):
     """
-    Statutory ICMR-NIN 2020 / FSSAI thresholds for evaluating nutrient densities.
-    Defines Low, Moderate, and High boundaries per 100g/ml for solids and liquids.
+    [DEPRECATED]: Superseded by `IcmrHfssRule`. Retained for migration backward compatibility.
     """
     __tablename__ = "nutrition_interpretation_rules"
+    __deprecated__ = True
 
     rule_id: Mapped[str] = mapped_column(String(100), primary_key=True)
     nutrient_code: Mapped[str] = mapped_column(
@@ -41,4 +52,3 @@ class NutritionRule(Base):
 
     # Relationships
     nutrient: Mapped["Nutrient"] = relationship("Nutrient", back_populates="interpretation_rules")
-
