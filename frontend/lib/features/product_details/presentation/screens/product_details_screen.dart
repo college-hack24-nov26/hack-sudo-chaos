@@ -144,11 +144,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                             child: IngredientIntelligenceCard(
                               ingredientAnalysis: details.ingredientAnalysis,
                               onNavigateToDetails: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Ingredient Details screen integration point prepared.'),
-                                  ),
-                                );
+                                context.push('/product/${details.product.barcode}/ingredients');
                               },
                             ),
                           ),
@@ -160,15 +156,11 @@ class ProductDetailsScreen extends ConsumerWidget {
                           KeyFindingsCard(findings: details.keyFindings),
                           const SizedBox(height: AppSpacing.md),
                           IngredientIntelligenceCard(
-                            ingredientAnalysis: details.ingredientAnalysis,
-                            onNavigateToDetails: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Ingredient Details screen integration point prepared.'),
-                                ),
-                              );
-                            },
-                          ),
+                              ingredientAnalysis: details.ingredientAnalysis,
+                              onNavigateToDetails: () {
+                                context.push('/product/${details.product.barcode}/ingredients');
+                              },
+                            ),
                         ],
                       );
                     }

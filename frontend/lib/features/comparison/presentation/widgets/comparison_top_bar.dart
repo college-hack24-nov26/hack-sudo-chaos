@@ -145,3 +145,4 @@ class ComparisonTopBar extends StatelessWidget {
     );
   }
 }
+

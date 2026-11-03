@@ -187,3 +187,4 @@ class ComparisonNutritionTable extends StatelessWidget {
     );
   }
 }
+
