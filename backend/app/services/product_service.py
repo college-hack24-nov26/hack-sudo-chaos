@@ -258,6 +258,7 @@ class ProductService:
             serving_size_unit=domain_product.serving_size_unit or "g",
             is_verified=is_verified,
             source_id=domain_product.data_source_id or ("local_db" if is_persisted else "open_food_facts"),
+            source_provenance="Curated and Verified Manufacturer Packaging" if is_verified else ("Verified Local Database" if is_persisted else "Open Food Facts (Crowdsourced / Unverified)"),
             nutrient_count=len(domain_product.nutrients),
             ingredient_count=len(domain_product.ingredients),
             is_persisted=is_persisted,

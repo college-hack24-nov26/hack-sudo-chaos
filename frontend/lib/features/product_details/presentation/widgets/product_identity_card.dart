@@ -38,33 +38,66 @@ class ProductIdentityCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (isFssaiCompliant == true) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.positiveBackground,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(color: AppColors.positiveBorder, width: 0.8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle_rounded, size: 12.0, color: AppColors.positive),
-                            SizedBox(width: 4.0),
-                            Text(
-                              'FSSAI Compliant',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.positive,
-                              ),
+                    Wrap(
+                      spacing: 6.0,
+                      runSpacing: 4.0,
+                      children: [
+                        if (isFssaiCompliant == true)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                            decoration: BoxDecoration(
+                              color: AppColors.positiveBackground,
+                              borderRadius: BorderRadius.circular(12.0),
+                              border: Border.all(color: AppColors.positiveBorder, width: 0.8),
                             ),
-                          ],
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle_rounded, size: 12.0, color: AppColors.positive),
+                                SizedBox(width: 4.0),
+                                Text(
+                                  'FSSAI Compliant',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.positive,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                          decoration: BoxDecoration(
+                            color: product.isVerified ? const Color(0xFFE8F5E9) : const Color(0xFFFFF8E1),
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                              color: product.isVerified ? const Color(0xFFA5D6A7) : const Color(0xFFFFE082),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                product.isVerified ? Icons.verified_rounded : Icons.info_outline_rounded,
+                                size: 12.0,
+                                color: product.isVerified ? const Color(0xFF2E7D32) : const Color(0xFFF57F17),
+                              ),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                product.isVerified ? 'Verified' : 'Unverified',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: product.isVerified ? const Color(0xFF2E7D32) : const Color(0xFFF57F17),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ] else ...[
-                      const SizedBox.shrink(),
-                    ],
+                      ],
+                    ),
                     // Indian Veg / Non-Veg Indicator
                     if (product.isVeg != null) _VegIndicator(isVeg: product.isVeg!),
                   ],

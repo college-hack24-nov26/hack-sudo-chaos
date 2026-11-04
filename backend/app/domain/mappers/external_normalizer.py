@@ -144,8 +144,15 @@ class ExternalProductNormalizer:
                     break
 
             # Serving value if present
-            serving_val_key = f"{canonical_slug}_serving"
-            raw_serving = nutriments.get(serving_val_key)
+            serving_val_keys = [f"{canonical_slug}_serving"] + [
+                vk.replace("_100g", "_serving").replace("_value", "_serving")
+                for vk in val_keys
+            ]
+            raw_serving = None
+            for sk in serving_val_keys:
+                if sk in nutriments and nutriments[sk] is not None:
+                    raw_serving = nutriments[sk]
+                    break
 
             # 2. Locate unit
             raw_unit = None
@@ -170,6 +177,17 @@ class ExternalProductNormalizer:
             dec_100: Optional[Decimal] = None
             dec_serving: Optional[Decimal] = None
 
+            # Extract serving quantity if declared
+            serv_qty_num: Optional[float] = None
+            raw_sq = raw_product.get("serving_quantity")
+            if raw_sq is not None:
+                try:
+                    sq_f = float(raw_sq)
+                    if sq_f > 0:
+                        serv_qty_num = sq_f
+                except (ValueError, TypeError):
+                    serv_qty_num = None
+
             if measurement_basis in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML):
                 if raw_val is not None:
                     try:
@@ -181,15 +199,23 @@ class ExternalProductNormalizer:
                         dec_serving = Decimal(str(raw_serving))
                     except (InvalidOperation, ValueError, TypeError):
                         dec_serving = None
+                elif dec_100 is not None and serv_qty_num is not None:
+                    # Verified serving weight exists: compute per-serving value
+                    dec_serving = Decimal(str(round(float(dec_100) * serv_qty_num / 100.0, 2)))
+
             elif measurement_basis == MeasurementBasis.PER_SERVING:
-                # Strictly per-serving declaration; per_100g_value remains None
                 serv_val = raw_serving if raw_serving is not None else raw_val
                 if serv_val is not None:
                     try:
                         dec_serving = Decimal(str(serv_val))
                     except (InvalidOperation, ValueError, TypeError):
                         dec_serving = None
-                dec_100 = None
+                if dec_serving is not None and serv_qty_num is not None:
+                    # Verified serving weight exists: compute per-100g value
+                    dec_100 = Decimal(str(round(float(dec_serving) * 100.0 / serv_qty_num, 2)))
+                else:
+                    dec_100 = None
+
             else:
                 # Unresolved measurement basis (None) -> Cannot safely assign to 100g or serving
                 dec_100 = None

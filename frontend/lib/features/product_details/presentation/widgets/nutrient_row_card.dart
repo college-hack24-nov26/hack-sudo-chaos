@@ -93,7 +93,7 @@ class NutrientRowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayValue = isPerServing
-        ? (nutrient.valuePerServing ?? nutrient.valuePer100g)
+        ? nutrient.valuePerServing
         : nutrient.valuePer100g;
 
     final formattedValue = displayValue != null
@@ -164,16 +164,27 @@ class NutrientRowCard extends StatelessWidget {
                   ],
                 ),
 
-                // Threshold Visual Scale (Rendered ONLY when backend provides threshold scale)
+                // Threshold Visual Scale (Scaled to match current basis so visual marker matches classification)
                 if (hasThresholds) ...[
                   const SizedBox(height: 10.0),
                   Padding(
                     padding: const EdgeInsets.only(left: 48.0),
-                    child: _ThresholdScaleBar(
-                      value: displayValue,
-                      lowMax: nutrient.lowThresholdMax!,
-                      moderateMax: nutrient.moderateThresholdMax!,
-                      highMin: nutrient.highThresholdMin!,
+                    child: Builder(
+                      builder: (context) {
+                        double scaleFactor = 1.0;
+                        if (isPerServing &&
+                            nutrient.valuePerServing != null &&
+                            nutrient.valuePer100g != null &&
+                            nutrient.valuePer100g! > 0) {
+                          scaleFactor = nutrient.valuePerServing! / nutrient.valuePer100g!;
+                        }
+                        return _ThresholdScaleBar(
+                          value: displayValue,
+                          lowMax: nutrient.lowThresholdMax! * scaleFactor,
+                          moderateMax: nutrient.moderateThresholdMax! * scaleFactor,
+                          highMin: nutrient.highThresholdMin! * scaleFactor,
+                        );
+                      },
                     ),
                   ),
                 ],

@@ -254,17 +254,32 @@ class NutritionalInterpretation {
   final String basis;
   final String referenceStandard;
   final List<NutrientItem> nutrients;
+  final double? servingSizeValue;
+  final String servingSizeUnit;
+  final String dataQuality;
+  final List<String> dataInconsistencies;
 
   const NutritionalInterpretation({
     this.basis = 'per_100g',
     this.referenceStandard = 'ICMR-NIN 2020 RDA',
     this.nutrients = const [],
+    this.servingSizeValue,
+    this.servingSizeUnit = 'g',
+    this.dataQuality = 'VERIFIED',
+    this.dataInconsistencies = const [],
   });
 
   factory NutritionalInterpretation.fromJson(Map<String, dynamic> json) {
     return NutritionalInterpretation(
       basis: json['basis']?.toString() ?? 'per_100g',
       referenceStandard: json['reference_standard']?.toString() ?? 'ICMR-NIN 2020 RDA',
+      servingSizeValue: (json['serving_size_value'] as num?)?.toDouble(),
+      servingSizeUnit: json['serving_size_unit']?.toString() ?? 'g',
+      dataQuality: json['data_quality']?.toString() ?? 'VERIFIED',
+      dataInconsistencies: (json['data_inconsistencies'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       nutrients: (json['nutrients'] as List<dynamic>?)
               ?.map((e) => NutrientItem.fromJson(e as Map<String, dynamic>))
               .toList() ??

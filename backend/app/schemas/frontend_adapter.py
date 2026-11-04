@@ -23,6 +23,7 @@ from app.domain.engines.contracts import (
     EvaluationStatus,
     FoodForm,
     NutrientDataStatus,
+    MeasurementBasis,
 )
 
 
@@ -46,6 +47,10 @@ class NutritionalInterpretationModel(BaseModel):
     basis: str = "per_100g"
     reference_standard: str = "ICMR-NIN 2020 RDA & FSSAI 2020"
     nutrients: List[NutrientItemModel] = Field(default_factory=list)
+    serving_size_value: Optional[float] = None
+    serving_size_unit: str = "g"
+    data_quality: str = "VERIFIED"  # 'VERIFIED', 'UNVERIFIED_EXTERNAL', 'OCR_EXTRACTED', 'INCOMPLETE', 'INCONSISTENT'
+    data_inconsistencies: List[str] = Field(default_factory=list)
 
 
 class RegulatoryClaimItemModel(BaseModel):
@@ -119,6 +124,117 @@ NUTRIENT_THRESHOLDS: Dict[str, Dict[str, float]] = {
 }
 
 
+CANONICAL_NUTRIENT_ORDER: List[str] = [
+    "energy",
+    "protein",
+    "carbohydrates",
+    "total_sugars",
+    "added_sugars",
+    "total_fat",
+    "saturated_fat",
+    "trans_fat",
+    "sodium",
+    "dietary_fibre",
+]
+
+
+def validate_nutrient_consistency(
+    nutrients: Dict[str, NutrientObservationInput],
+) -> List[str]:
+    """
+    Validates regulatory and mathematical consistency across declared nutrient observations:
+    1. Negative values are forbidden.
+    2. Added sugars must not exceed total sugars.
+    3. Saturated fat must not exceed total fat.
+    4. Trans fat must not exceed total fat.
+    5. Energy plausibility against macronutrient Atwater calculation.
+    """
+    inconsistencies: List[str] = []
+
+    # 1. Negative quantity checks
+    for slug, obs in nutrients.items():
+        if obs.per_100g_value is not None and obs.per_100g_value < Decimal("0"):
+            inconsistencies.append(
+                f"Nutrient '{slug}' per-100 quantity cannot be negative ({obs.per_100g_value})."
+            )
+        if obs.per_serving_value is not None and obs.per_serving_value < Decimal("0"):
+            inconsistencies.append(
+                f"Nutrient '{slug}' per-serving quantity cannot be negative ({obs.per_serving_value})."
+            )
+
+    # 2. Added sugars <= Total sugars
+    added = nutrients.get("added_sugars")
+    total_s = nutrients.get("total_sugars")
+    if added and total_s:
+        if (
+            added.per_100g_value is not None
+            and total_s.per_100g_value is not None
+            and added.per_100g_value > total_s.per_100g_value
+        ):
+            inconsistencies.append(
+                f"Added sugars ({float(added.per_100g_value):.1f}g) exceeds total sugars ({float(total_s.per_100g_value):.1f}g) per 100g."
+            )
+
+    # 3. Saturated fat <= Total fat
+    sat = nutrients.get("saturated_fat")
+    tot_f = nutrients.get("total_fat")
+    if sat and tot_f:
+        if (
+            sat.per_100g_value is not None
+            and tot_f.per_100g_value is not None
+            and sat.per_100g_value > tot_f.per_100g_value
+        ):
+            inconsistencies.append(
+                f"Saturated fat ({float(sat.per_100g_value):.1f}g) exceeds total fat ({float(tot_f.per_100g_value):.1f}g) per 100g."
+            )
+
+    # 4. Trans fat <= Total fat
+    trans = nutrients.get("trans_fat")
+    if trans and tot_f:
+        if (
+            trans.per_100g_value is not None
+            and tot_f.per_100g_value is not None
+            and trans.per_100g_value > tot_f.per_100g_value
+        ):
+            inconsistencies.append(
+                f"Trans fat ({float(trans.per_100g_value):.1f}g) exceeds total fat ({float(tot_f.per_100g_value):.1f}g) per 100g."
+            )
+
+    # 5. Energy plausibility against macronutrients
+    energy = nutrients.get("energy")
+    protein = nutrients.get("protein")
+    carbs = nutrients.get("carbohydrates")
+    fibre = nutrients.get("dietary_fibre")
+    if (
+        energy
+        and energy.per_100g_value is not None
+        and protein
+        and protein.per_100g_value is not None
+        and tot_f
+        and tot_f.per_100g_value is not None
+        and carbs
+        and carbs.per_100g_value is not None
+    ):
+        p_val = protein.per_100g_value
+        f_val = tot_f.per_100g_value
+        c_val = carbs.per_100g_value
+        fib_val = (
+            fibre.per_100g_value
+            if (fibre and fibre.per_100g_value is not None)
+            else Decimal("0")
+        )
+        avail_carb = max(Decimal("0"), c_val - fib_val) if fib_val > Decimal("0") and c_val >= fib_val else c_val
+        calc_energy = (p_val * Decimal("4.0")) + (f_val * Decimal("9.0")) + (avail_carb * Decimal("4.0")) + (fib_val * Decimal("2.0"))
+        declared = energy.per_100g_value
+        diff = abs(declared - calc_energy)
+        if declared > Decimal("0") and (diff / declared) > Decimal("0.35") and diff > Decimal("60.0"):
+            inconsistencies.append(
+                f"Declared energy ({float(declared):.0f} kcal) deviates significantly from estimated macronutrient sum (~{float(calc_energy):.0f} kcal)."
+            )
+
+    return inconsistencies
+
+
 def build_frontend_sections(
     domain_product: ProductEvaluationInput,
     nutrition_eval: Optional[EngineBatchResult],
@@ -155,11 +271,60 @@ def build_frontend_sections(
                     if k in r.rule_id or k in r.rule_code.lower():
                         icmr_breaches[k] = True
 
-    for slug, obs in domain_product.nutrients.items():
+    # 1. Run consistency validation & determine data quality
+    inconsistencies = validate_nutrient_consistency(domain_product.nutrients)
+
+    data_quality = "VERIFIED"
+    if inconsistencies:
+        data_quality = "INCONSISTENT"
+    elif domain_product.data_source_id in ("open_food_facts", "unverified_external"):
+        data_quality = "UNVERIFIED_EXTERNAL"
+    elif domain_product.data_source_id in ("on_device_ocr", "ocr_extracted"):
+        data_quality = "OCR_EXTRACTED"
+    elif any(
+        obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN)
+        for obs in domain_product.nutrients.values()
+    ):
+        data_quality = "INCOMPLETE"
+
+    has_verified_serving = (
+        domain_product.serving_size_value is not None
+        and domain_product.serving_size_value > Decimal("0")
+    )
+    serving_factor = (
+        float(domain_product.serving_size_value) / 100.0
+        if has_verified_serving
+        else None
+    )
+
+    # Sort nutrients canonically
+    sorted_slugs: List[str] = [s for s in CANONICAL_NUTRIENT_ORDER if s in domain_product.nutrients]
+    for s in domain_product.nutrients:
+        if s not in sorted_slugs:
+            sorted_slugs.append(s)
+
+    for slug in sorted_slugs:
+        obs = domain_product.nutrients[slug]
         disp_name = NUTRIENT_DISPLAY_NAMES.get(slug, slug.replace("_", " ").title())
         val_100 = float(obs.per_100g_value) if obs.per_100g_value is not None else None
         val_serving = float(obs.per_serving_value) if obs.per_serving_value is not None else None
         rda_pct = rdi_percentages.get(slug)
+
+        # Automatic bi-directional serving conversion when verified serving size is available:
+        if (
+            val_serving is None
+            and val_100 is not None
+            and has_verified_serving
+            and obs.measurement_basis in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML)
+        ):
+            val_serving = round(val_100 * serving_factor, 2)
+        elif (
+            val_100 is None
+            and val_serving is not None
+            and has_verified_serving
+            and obs.measurement_basis == MeasurementBasis.PER_SERVING
+        ):
+            val_100 = round(val_serving * (100.0 / float(domain_product.serving_size_value)), 2)
 
         # Classification and concern level
         classification = "Moderate"
@@ -213,6 +378,10 @@ def build_frontend_sections(
         basis=basis_str,
         reference_standard="ICMR-NIN 2020 RDA & FSSAI 2020",
         nutrients=nutrients_list,
+        serving_size_value=float(domain_product.serving_size_value) if domain_product.serving_size_value else None,
+        serving_size_unit=domain_product.serving_size_unit or ("ml" if domain_product.food_form == FoodForm.LIQUID else "g"),
+        data_quality=data_quality,
+        data_inconsistencies=inconsistencies,
     )
 
     # 2. Build Regulatory Claims Validation

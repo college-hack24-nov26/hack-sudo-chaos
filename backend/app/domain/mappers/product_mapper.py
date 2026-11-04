@@ -185,6 +185,7 @@ class ProductMapper:
         cls,
         pn: ProductNutrient,
         food_form: FoodForm = FoodForm.SOLID,
+        serving_size_value: Optional[Decimal] = None,
     ) -> NutrientObservationInput:
         """
         Transforms a single ProductNutrient ORM entity into a NutrientObservationInput DTO.
@@ -220,10 +221,29 @@ class ProductMapper:
             is_unit_valid=is_unit_valid,
         )
 
+        dec_100 = pn.per_100g_value
+        dec_serving = pn.per_serving_value
+        if (
+            dec_serving is None
+            and dec_100 is not None
+            and serving_size_value is not None
+            and serving_size_value > Decimal("0")
+            and basis in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML)
+        ):
+            dec_serving = Decimal(str(round(float(dec_100) * float(serving_size_value) / 100.0, 2)))
+        elif (
+            dec_100 is None
+            and dec_serving is not None
+            and serving_size_value is not None
+            and serving_size_value > Decimal("0")
+            and basis == MeasurementBasis.PER_SERVING
+        ):
+            dec_100 = Decimal(str(round(float(dec_serving) * 100.0 / float(serving_size_value), 2)))
+
         return NutrientObservationInput(
             nutrient_code=pn.nutrient_code,
-            per_100g_value=pn.per_100g_value,
-            per_serving_value=pn.per_serving_value,
+            per_100g_value=dec_100,
+            per_serving_value=dec_serving,
             unit=unit,
             data_status=data_status,
             measurement_basis=basis,
@@ -292,7 +312,7 @@ class ProductMapper:
         nutrients_dict: Dict[str, NutrientObservationInput] = {}
         if product.nutrients:
             for pn in product.nutrients:
-                nutrients_dict[pn.nutrient_code] = cls.map_nutrient(pn, food_form=food_form)
+                nutrients_dict[pn.nutrient_code] = cls.map_nutrient(pn, food_form=food_form, serving_size_value=product.serving_size_value)
 
         # 2. Map Ingredients (preserving sequence_order ascending = label descending weight)
         ingredients_list: List[IngredientObservationInput] = []
