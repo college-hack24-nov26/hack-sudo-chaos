@@ -57,6 +57,10 @@ class CategoryInfoSchema(BaseModel):
     count: int
 
 
+class CategoryListResponseSchema(BaseModel):
+    items: List[CategoryInfoSchema] = Field(default_factory=list)
+
+
 CATEGORY_EXPANSIONS: Dict[str, List[str]] = {
     "biscuits": ["Biscuits & Bakery", "BISCUIT", "WAFER", "Biscuit", "Cookies"],
     "biscuit": ["Biscuits & Bakery", "BISCUIT", "WAFER", "Biscuit", "Cookies"],
@@ -336,8 +340,8 @@ def search_products(
     return SearchResponseSchema(items=results)
 
 
-@router.get("/categories", response_model=List[CategoryInfoSchema], summary="List Categories with Counts")
-def get_categories(db: Session = Depends(get_db)) -> List[CategoryInfoSchema]:
+@router.get("/categories", response_model=CategoryListResponseSchema, summary="List Categories with Counts")
+def get_categories(db: Session = Depends(get_db)) -> CategoryListResponseSchema:
     """
     Returns high-level food categories with count of available products in the database.
     """
@@ -374,7 +378,7 @@ def get_categories(db: Session = Depends(get_db)) -> List[CategoryInfoSchema]:
             CategoryInfoSchema(id="chocolates", label="Chocolates & Sweets", count=227),
             CategoryInfoSchema(id="sauces", label="Sauces & Spreads", count=39),
         ]
-    return output
+    return CategoryListResponseSchema(items=output)
 
 
 @router.get("/trending", response_model=TrendingResponseSchema, summary="Get Trending Packaged Products")

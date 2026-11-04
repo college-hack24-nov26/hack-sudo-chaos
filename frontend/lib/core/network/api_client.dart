@@ -29,6 +29,8 @@ class ApiClient {
       final response = await _dio.get(path, queryParameters: queryParameters);
       if (response.data is Map<String, dynamic>) {
         return response.data as Map<String, dynamic>;
+      } else if (response.data is List) {
+        return {'items': response.data};
       } else {
         throw const ApiException(
           message: 'Unexpected non-JSON response from server',
@@ -56,6 +58,8 @@ class ApiClient {
       );
       if (response.data is Map<String, dynamic>) {
         return response.data as Map<String, dynamic>;
+      } else if (response.data is List) {
+        return {'items': response.data};
       } else {
         throw const ApiException(
           message: 'Unexpected non-JSON response from server',

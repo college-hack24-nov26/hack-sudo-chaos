@@ -285,7 +285,7 @@ class NutritionalInterpretation {
     return NutritionalInterpretation(
       basis: json['basis']?.toString() ?? 'per_100g',
       referenceStandard: json['reference_standard']?.toString() ?? 'ICMR-NIN 2020 RDA',
-      servingSizeValue: (json['serving_size_value'] as num?)?.toDouble(),
+      servingSizeValue: _toDouble(json['serving_size_value']),
       servingSizeUnit: json['serving_size_unit']?.toString() ?? 'g',
       dataQuality: json['data_quality']?.toString() ?? 'VERIFIED',
       dataInconsistencies: (json['data_inconsistencies'] as List<dynamic>?)
