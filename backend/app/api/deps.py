@@ -13,12 +13,13 @@ from app.db.session import get_db
 from app.repositories.product_repository import ProductRepository
 from app.integrations.open_food_facts import OpenFoodFactsClient
 from app.services.product_service import ProductService
-from app.domain.engines.coordinator import EvaluationCoordinator
+from app.domain.engines.coordinator import EvaluationCoordinator, EvaluationRulesBundle
 
 
 # Singleton instances for zero-allocation reuse
 _off_client = OpenFoodFactsClient()
-_coordinator = EvaluationCoordinator.get_default()
+_rules_bundle = EvaluationRulesBundle.from_seed_files()
+_coordinator = EvaluationCoordinator(rules_bundle=_rules_bundle)
 
 
 def get_product_repository(db: Session = Depends(get_db)) -> ProductRepository:

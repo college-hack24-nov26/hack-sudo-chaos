@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
@@ -32,8 +33,8 @@ app = FastAPI(
         "ICMR-NIN 2024 Table 15.1/15.2 HFSS classification, and ingredient audits."
     ),
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url=f"{settings.API_V1_STR}/docs",
-    redoc_url=f"{settings.API_V1_STR}/redoc",
+    docs_url=None,
+    redoc_url=None,
 )
 
 # CORS Configuration for Flutter Web and Mobile Clients
@@ -96,22 +97,37 @@ async def health_check():
     }
 
 
-# Documentation Convenience Redirects
+# Direct Documentation Endpoints (Accessible at both root and versioned paths)
 @app.get("/docs", include_in_schema=False)
-async def redirect_docs():
-    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
+@app.get(f"{settings.API_V1_STR}/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        title=f"{settings.APP_NAME} - Swagger UI",
+    )
 
 
 @app.get("/redoc", include_in_schema=False)
-async def redirect_redoc():
-    return RedirectResponse(url=f"{settings.API_V1_STR}/redoc")
+@app.get(f"{settings.API_V1_STR}/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    return get_redoc_html(
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        title=f"{settings.APP_NAME} - ReDoc",
+    )
 
 
 @app.get("/openapi.json", include_in_schema=False)
-async def redirect_openapi():
-    return RedirectResponse(url=f"{settings.API_V1_STR}/openapi.json")
+async def get_root_openapi():
+    return JSONResponse(content=app.openapi())
 
 
 # Mount Versioned API Router
-app.include_router(api_router, prefix=settings.API_V1_STR)
+import os
+from fastapi.staticfiles import StaticFiles
 
+# Mount static directory for local cropped product packet images
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+app.include_router(api_router, prefix=settings.API_V1_STR)

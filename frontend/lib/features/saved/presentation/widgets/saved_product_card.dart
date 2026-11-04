@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../data/models/saved_product_model.dart';
@@ -42,30 +43,15 @@ class SavedProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 1. Left Product Thumbnail (62x62)
-                Container(
+                ProductPacketImage(
+                  imageUrl: item.imageUrl,
+                  barcode: item.barcode,
+                  category: item.category,
                   width: 62.0,
                   height: 62.0,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14.0),
-                    border: Border.all(color: const Color(0xFFEFE8E1), width: 0.8),
-                  ),
-                  alignment: Alignment.center,
-                  child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
-                      ? Image.network(
-                          item.imageUrl!,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.inventory_2_outlined,
-                            size: 26.0,
-                            color: Color(0xFF8E8A93),
-                          ),
-                        )
-                      : const Icon(
-                          Icons.inventory_2_outlined,
-                          size: 26.0,
-                          color: Color(0xFF8E8A93),
-                        ),
+                  fit: BoxFit.contain,
+                  borderRadius: BorderRadius.circular(14.0),
+                  backgroundColor: Colors.white,
                 ),
                 const SizedBox(width: 14.0),
 

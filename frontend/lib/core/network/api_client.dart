@@ -43,6 +43,33 @@ class ApiClient {
     }
   }
 
+  Future<Map<String, dynamic>> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw const ApiException(
+          message: 'Unexpected non-JSON response from server',
+          errorType: 'INVALID_RESPONSE_FORMAT',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Unexpected error: $e');
+    }
+  }
+
   ApiException _handleDioError(DioException error) {
     final response = error.response;
     final statusCode = response?.statusCode;

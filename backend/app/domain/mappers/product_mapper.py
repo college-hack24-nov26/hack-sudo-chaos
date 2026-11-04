@@ -125,25 +125,28 @@ class ProductMapper:
 
     @staticmethod
     def determine_measurement_basis(
-        food_form: FoodForm,
+        food_form: Optional[FoodForm],
         has_per_100g_declaration: bool,
         has_per_serving_declaration: bool,
-    ) -> MeasurementBasis:
+    ) -> Optional[MeasurementBasis]:
         """
         Determines the statutory measurement basis strictly from product metadata (food_form)
         and declaration scope. Never infers from numeric values.
 
-        - Solid food with reference quantity: PER_100G
-        - Liquid food with reference quantity: PER_100ML
         - Serving-only declaration: PER_SERVING
+        - Liquid food with reference quantity: PER_100ML
+        - Solid food with reference quantity: PER_100G
+        - Unresolved / unknown: None
         """
         if not has_per_100g_declaration and has_per_serving_declaration:
             return MeasurementBasis.PER_SERVING
 
         if food_form == FoodForm.LIQUID:
             return MeasurementBasis.PER_100ML
+        elif food_form == FoodForm.SOLID:
+            return MeasurementBasis.PER_100G
 
-        return MeasurementBasis.PER_100G
+        return None
 
     @staticmethod
     def map_nutrient_status(
@@ -221,6 +224,7 @@ class ProductMapper:
             is_unit_valid=is_unit_valid,
         )
 
+<<<<<<< Updated upstream
         dec_100 = pn.per_100g_value
         dec_serving = pn.per_serving_value
         if (
@@ -244,6 +248,23 @@ class ProductMapper:
             nutrient_code=pn.nutrient_code,
             per_100g_value=dec_100,
             per_serving_value=dec_serving,
+=======
+        per_100g = pn.per_100g_value
+        per_serving = pn.per_serving_value
+
+        # Critical Guard: PER_SERVING values do not become per-100g values
+        if basis == MeasurementBasis.PER_SERVING:
+            per_100g = None
+        elif basis is None:
+            # Unresolved basis cannot be safely attributed to 100g or serving
+            per_100g = None
+            per_serving = None
+
+        return NutrientObservationInput(
+            nutrient_code=pn.nutrient_code,
+            per_100g_value=per_100g,
+            per_serving_value=per_serving,
+>>>>>>> Stashed changes
             unit=unit,
             data_status=data_status,
             measurement_basis=basis,

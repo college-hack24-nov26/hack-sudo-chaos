@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import '../../../product_details/data/models/product_response_model.dart';
 
@@ -47,16 +48,13 @@ class IngredientProductSummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Left Product Image (width: 82, height: 92)
-            SizedBox(
+            ProductPacketImage(
+              imageUrl: identity?.imageUrl,
+              barcode: identity?.barcode,
+              category: identity?.foodCategory,
               width: 82.0,
               height: 92.0,
-              child: identity?.imageUrl != null && identity!.imageUrl!.trim().isNotEmpty
-                  ? Image.network(
-                      identity.imageUrl!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => _buildFallbackImage(),
-                    )
-                  : _buildFallbackImage(),
+              fit: BoxFit.contain,
             ),
 
             const SizedBox(width: 16.0),
@@ -126,21 +124,5 @@ class IngredientProductSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFallbackImage() {
-    return Container(
-      width: 82.0,
-      height: 92.0,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.inventory_2_outlined,
-        size: 38.0,
-        color: Color(0xFFAFA7B8),
-      ),
-    );
-  }
 }
 

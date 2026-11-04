@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -264,18 +265,16 @@ class _ProductPickerModalState extends ConsumerState<ProductPickerModal>
                     Container(
                       width: 48.0,
                       height: 48.0,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF6F2),
+                      child: ProductPacketImage(
+                        imageUrl: item.imageUrl,
+                        barcode: item.barcode,
+                        category: item.category,
+                        width: 48.0,
+                        height: 48.0,
+                        fit: BoxFit.contain,
                         borderRadius: BorderRadius.circular(10.0),
+                        backgroundColor: const Color(0xFFFAF6F2),
                       ),
-                      alignment: Alignment.center,
-                      child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                          ? Image.network(
-                              item.imageUrl!,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.fastfood, size: 24.0),
-                            )
-                          : const Icon(Icons.fastfood, size: 24.0, color: Color(0xFF887D94)),
                     ),
                     const SizedBox(width: 12.0),
                     Expanded(

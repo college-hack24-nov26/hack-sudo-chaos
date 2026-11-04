@@ -15,6 +15,20 @@ from app.models.product_nutrient import ProductNutrient
 from app.models.product_ingredient import ProductIngredient
 
 
+BARCODE_ALIASES: dict = {
+    "8901030383701": "8901063142022",  # NutriChoice candidate -> verified
+    "8901063142022": "8901030383701",  # NutriChoice verified -> candidate
+    "8901058860002": "8901058851298",  # Maggi candidate -> verified
+    "8901058851298": "8901058860002",  # Maggi verified -> candidate
+    "8901233024013": "8901233023724",  # Bournvita candidate -> verified
+    "8901233023724": "8901233024013",  # Bournvita verified -> candidate
+    "8904063200150": "8904063218124",  # Haldiram's candidate -> verified
+    "8904063218124": "8904063200150",  # Haldiram's verified -> candidate
+    "8901491101838": "8901491101837",  # Lay's candidate -> verified
+    "8901491101837": "8901491101838",  # Lay's verified -> candidate
+}
+
+
 class ProductRepository:
     """
     Repository handling data access and retrieval for Products and their
@@ -50,7 +64,12 @@ class ProductRepository:
         if not clean_barcode:
             return None
 
-        stmt = select(Product).where(Product.barcode == clean_barcode)
+        target_barcode = BARCODE_ALIASES.get(clean_barcode, clean_barcode)
+        stmt = (
+            select(Product)
+            .where(Product.barcode.in_([clean_barcode, target_barcode]))
+            .order_by(Product.is_verified.desc())
+        )
 
         if load_relationships:
             stmt = stmt.options(
@@ -60,7 +79,7 @@ class ProductRepository:
             )
 
         result = self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalars().first()
 
     def get_by_id(
         self,

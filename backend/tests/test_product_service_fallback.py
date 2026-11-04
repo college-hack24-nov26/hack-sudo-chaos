@@ -28,10 +28,12 @@ from app.integrations.open_food_facts import (
 from app.services.product_service import ProductService
 from app.domain.engines.coordinator import EvaluationCoordinator
 from app.schemas.product_analysis import ProductAnalysisResponse
+from app.core.cache import product_cache
 
 
 class TestProductServiceFallback(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        product_cache.clear()
         self.mock_repo = MagicMock(spec=ProductRepository)
         self.mock_repo.session = MagicMock()
         self.mock_off = MagicMock(spec=OpenFoodFactsClient)

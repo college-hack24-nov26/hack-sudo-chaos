@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/product_packet_image.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../data/models/search_models.dart';
 
@@ -391,29 +392,15 @@ class _TrendingProductCard extends StatelessWidget {
                 child: Row(
                   children: [
                     // Left Product Thumbnail (42x58)
-                    Container(
+                    ProductPacketImage(
+                      imageUrl: item.imageUrl,
+                      barcode: item.barcode,
+                      category: item.category,
                       width: 42.0,
                       height: 58.0,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9F5F1),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      alignment: Alignment.center,
-                      child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
-                          ? Image.network(
-                              item.imageUrl!,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.inventory_2_outlined,
-                                size: 20.0,
-                                color: Color(0xFF8E8A93),
-                              ),
-                            )
-                          : const Icon(
-                              Icons.inventory_2_outlined,
-                              size: 20.0,
-                              color: Color(0xFF8E8A93),
-                            ),
+                      fit: BoxFit.contain,
+                      borderRadius: BorderRadius.circular(10.0),
+                      backgroundColor: const Color(0xFFF9F5F1),
                     ),
                     const SizedBox(width: 8.0),
                     // Right Details Column

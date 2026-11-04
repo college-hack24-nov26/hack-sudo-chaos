@@ -38,6 +38,7 @@ class ScanInsightSchema(BaseModel):
     total_scanned_count: int
     finding_type: str  # 'high_sodium', 'high_sugar', 'high_fat', 'balanced'
     timeframe: str = "7d"
+    insight: Optional[dict] = None
 
 
 # Sample realistic scan history items for immediate offline/development presentation
@@ -92,8 +93,32 @@ def get_recent_scans(
 ) -> ScanHistoryResponseSchema:
     """
     Returns recent product scan ledger formatted for Flutter recent scans section.
+    Reads from permanent SQLite storage first to persist across app restarts.
     """
-    # Returns the recent items constrained by limit
+    from app.core.persistent_store import persistent_store
+    persisted_scans = persistent_store.get_recent_scans(limit=limit)
+    if persisted_scans:
+        items = []
+        for s in persisted_scans:
+            try:
+                scanned_dt = datetime.fromisoformat(s["scanned_at"]) if isinstance(s["scanned_at"], str) else s["scanned_at"]
+            except Exception:
+                scanned_dt = datetime.now(timezone.utc)
+            items.append(
+                ScanHistoryItemSchema(
+                    barcode=s["barcode"],
+                    product_name=s["product_name"],
+                    brand_name=s["brand_name"],
+                    food_category=s["food_category"] or "Packaged Food",
+                    image_url=s["image_url"],
+                    scanned_at=scanned_dt,
+                    key_finding=s["key_finding"],
+                    key_finding_severity=s["key_finding_severity"] or "MODERATE",
+                )
+            )
+        return ScanHistoryResponseSchema(items=items)
+
+    # Fallback to realistic starter items if no scans recorded yet
     return ScanHistoryResponseSchema(
         items=[ScanHistoryItemSchema(**item) for item in SAMPLE_HISTORY_ITEMS[:limit]]
     )
@@ -106,12 +131,16 @@ def get_scan_insights(
     """
     Returns aggregated dietary pattern insight derived from recent scans.
     """
+    base = {
+        "title": "High Added Sugar Trend",
+        "description": "2 of your last 4 scanned foods exceed the ICMR dietary threshold for added sugars.",
+        "affected_count": 2,
+        "total_scanned_count": 4,
+        "finding_type": "high_sugar",
+        "timeframe": timeframe,
+    }
     return ScanInsightSchema(
-        title="High Added Sugar Trend",
-        description="2 of your last 4 scanned foods exceed the ICMR dietary threshold for added sugars.",
-        affected_count=2,
-        total_scanned_count=4,
-        finding_type="high_sugar",
-        timeframe=timeframe,
+        **base,
+        insight=base,
     )
 

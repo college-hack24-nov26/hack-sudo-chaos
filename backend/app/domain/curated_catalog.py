@@ -52,6 +52,7 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
         serving_size_value=Decimal("25.0"),
         serving_size_unit="g",
         nutrients={
+<<<<<<< Updated upstream
             "energy": _obs("energy", 482.0, "kcal", val_serving=120.5),
             "protein": _obs("protein", 8.0, "g", val_serving=2.0),
             "carbohydrates": _obs("carbohydrates", 68.0, "g", val_serving=17.0),
@@ -62,6 +63,19 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
             "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO, val_serving=0.0),
             "sodium": _obs("sodium", 450.0, "mg", val_serving=112.5),
             "dietary_fibre": _obs("dietary_fibre", 6.2, "g", val_serving=1.55),
+=======
+            "energy": _obs("energy", 482.0, "kcal"),
+            "protein": _obs("protein", 8.0, "g"),
+            "carbohydrates": _obs("carbohydrates", 63.5, "g"),
+            "carbohydrates": _obs("carbohydrates", 68.0, "g"),
+            "total_sugars": _obs("total_sugars", 14.5, "g"),
+            "added_sugars": _obs("added_sugars", 13.0, "g"),
+            "total_fat": _obs("total_fat", 21.0, "g"),
+            "saturated_fat": _obs("saturated_fat", 10.0, "g"),
+            "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "sodium": _obs("sodium", 450.0, "mg"),
+            "dietary_fibre": _obs("dietary_fibre", 6.2, "g"),
+>>>>>>> Stashed changes
         },
         ingredients=[
             IngredientObservationInput(
@@ -150,6 +164,7 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
         serving_size_value=Decimal("15.0"),
         serving_size_unit="g",
         nutrients={
+<<<<<<< Updated upstream
             "energy": _obs("energy", 133.0, "kcal", val_serving=19.95),
             "protein": _obs("protein", 1.2, "g", val_serving=0.18),
             "carbohydrates": _obs("carbohydrates", 31.0, "g", val_serving=4.65),
@@ -160,6 +175,18 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
             "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO, val_serving=0.0),
             "sodium": _obs("sodium", 850.0, "mg", val_serving=127.5),
             "dietary_fibre": _obs("dietary_fibre", 0.5, "g", val_serving=0.08),
+=======
+            "energy": _obs("energy", 133.0, "kcal"),
+            "protein": _obs("protein", 1.2, "g"),
+            "carbohydrates": _obs("carbohydrates", 28.0, "g"),
+            "total_sugars": _obs("total_sugars", 27.0, "g"),
+            "added_sugars": _obs("added_sugars", 24.5, "g"),
+            "total_fat": _obs("total_fat", 0.1, "g"),
+            "saturated_fat": _obs("saturated_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "sodium": _obs("sodium", 850.0, "mg"),
+            "dietary_fibre": _obs("dietary_fibre", 0.5, "g"),
+>>>>>>> Stashed changes
         },
         ingredients=[
             IngredientObservationInput(
@@ -296,6 +323,7 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
         serving_size_value=Decimal("200.0"),
         serving_size_unit="ml",
         nutrients={
+<<<<<<< Updated upstream
             "energy": _obs("energy", 56.0, "kcal", val_serving=112.0),
             "protein": _obs("protein", 0.4, "g", val_serving=0.8),
             "carbohydrates": _obs("carbohydrates", 13.5, "g", val_serving=27.0),
@@ -306,6 +334,18 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
             "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO, val_serving=0.0),
             "sodium": _obs("sodium", 10.0, "mg", val_serving=20.0),
             "dietary_fibre": _obs("dietary_fibre", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO, val_serving=0.0),
+=======
+            "energy": _obs("energy", 56.0, "kcal"),
+            "protein": _obs("protein", 0.4, "g"),
+            "carbohydrates": _obs("carbohydrates", 14.0, "g"),
+            "total_sugars": _obs("total_sugars", 13.0, "g"),
+            "added_sugars": _obs("added_sugars", 11.5, "g"),
+            "total_fat": _obs("total_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "saturated_fat": _obs("saturated_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "sodium": _obs("sodium", 10.0, "mg"),
+            "dietary_fibre": _obs("dietary_fibre", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+>>>>>>> Stashed changes
         },
         ingredients=[
             IngredientObservationInput(
@@ -342,6 +382,7 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
         serving_size_value=Decimal("20.0"),
         serving_size_unit="g",
         nutrients={
+<<<<<<< Updated upstream
             "energy": _obs("energy", 388.0, "kcal", val_serving=77.6),
             "protein": _obs("protein", 7.0, "g", val_serving=1.4),
             "carbohydrates": _obs("carbohydrates", 85.2, "g", val_serving=17.04),
@@ -352,6 +393,18 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
             "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO, val_serving=0.0),
             "sodium": _obs("sodium", 150.0, "mg", val_serving=30.0),
             "dietary_fibre": _obs("dietary_fibre", 1.5, "g", val_serving=0.3),
+=======
+            "energy": _obs("energy", 388.0, "kcal"),
+            "protein": _obs("protein", 7.0, "g"),
+            "carbohydrates": _obs("carbohydrates", 85.4, "g"),
+            "total_sugars": _obs("total_sugars", 32.0, "g"),
+            "added_sugars": _obs("added_sugars", 28.0, "g"),
+            "total_fat": _obs("total_fat", 1.8, "g"),
+            "saturated_fat": _obs("saturated_fat", 0.9, "g"),
+            "trans_fat": _obs("trans_fat", 0.0, "g", NutrientDataStatus.EXPLICITLY_ZERO),
+            "sodium": _obs("sodium", 150.0, "mg"),
+            "dietary_fibre": _obs("dietary_fibre", 1.5, "g"),
+>>>>>>> Stashed changes
         },
         ingredients=[
             IngredientObservationInput(
@@ -378,24 +431,51 @@ CURATED_DEMO_PRODUCTS: Dict[str, ProductEvaluationInput] = {
     ),
 }
 
+BARCODE_ALIASES: Dict[str, str] = {
+    "8901030383701": "8901063142022",  # NutriChoice candidate -> verified
+    "8901063142022": "8901030383701",  # NutriChoice verified -> candidate
+    "8901058860002": "8901058851298",  # Maggi candidate -> verified
+    "8901058851298": "8901058860002",  # Maggi verified -> candidate
+    "8901233024013": "8901233023724",  # Bournvita candidate -> verified
+    "8901233023724": "8901233024013",  # Bournvita verified -> candidate
+    "8904063200150": "8904063218124",  # Haldiram's candidate -> verified
+    "8904063218124": "8904063200150",  # Haldiram's verified -> candidate
+    "8901491101838": "8901491101837",  # Lay's candidate -> verified
+    "8901491101837": "8901491101838",  # Lay's verified -> candidate
+}
+
 CURATED_IMAGE_URLS: Dict[str, str] = {
-    "8901030383701": "https://images.openfoodfacts.org/images/products/890/103/038/3701/front_en.11.400.jpg",
-    "8901058860002": "https://images.openfoodfacts.org/images/products/890/105/885/2899/front_en.15.400.jpg",
-    "8901030825279": "https://images.openfoodfacts.org/images/products/890/103/082/5279/front_en.12.400.jpg",
-    "8904063200150": "https://images.openfoodfacts.org/images/products/890/149/110/1838/front_en.8.400.jpg",
-    "8901491101838": "https://images.openfoodfacts.org/images/products/890/149/110/1838/front_en.8.400.jpg",
-    "8901207010497": "https://images.openfoodfacts.org/images/products/890/120/701/0497/front_en.10.400.jpg",
-    "8901233024013": "https://images.openfoodfacts.org/images/products/890/123/302/4013/front_en.5.400.jpg",
+    "8901063142022": "/static/products/8901063142022.png",
+    "8901030383701": "/static/products/8901030383701.png",
+    "8901058851298": "/static/products/8901058851298.png",
+    "8901058860002": "/static/products/8901058860002.png",
+    "8901233023724": "/static/products/8901233023724.png",
+    "8901233024013": "/static/products/8901233024013.png",
+    "8906010500863": "/static/products/8906010500863.png",
+    "8901764061103": "/static/products/8901764061103.png",
+    "7622201756697": "/static/products/7622201756697.png",
+    "8901491101837": "/static/products/8901491101837.png",
+    "8901491101838": "/static/products/8901491101838.png",
+    "8901491100519": "/static/products/8901491100519.png",
+    "8901719100956": "/static/products/8901719100956.png",
+    "8904063218124": "/static/products/8904063218124.png",
+    "8904063200150": "/static/products/8904063200150.png",
+    "8901058868036": "/static/products/8901058868036.png",
+    "8901030825279": "/static/products/8901030825279.png",
+    "8901262010017": "/static/products/8901262010017.png",
+    "8901207010497": "/static/products/8901207010497.png",
 }
 
 
 def get_curated_product(barcode: str) -> Optional[ProductEvaluationInput]:
     """Retrieves a pre-calibrated product from the curated demonstration catalog."""
     clean_barcode = barcode.strip()
-    return CURATED_DEMO_PRODUCTS.get(clean_barcode)
+    target_barcode = BARCODE_ALIASES.get(clean_barcode, clean_barcode)
+    return CURATED_DEMO_PRODUCTS.get(clean_barcode) or CURATED_DEMO_PRODUCTS.get(target_barcode)
 
 
 def get_curated_image_url(barcode: str) -> Optional[str]:
     """Retrieves product front packaging image URL from curated catalogue."""
     clean_barcode = barcode.strip()
-    return CURATED_IMAGE_URLS.get(clean_barcode)
+    target_barcode = BARCODE_ALIASES.get(clean_barcode, clean_barcode)
+    return CURATED_IMAGE_URLS.get(clean_barcode) or CURATED_IMAGE_URLS.get(target_barcode) or f"/static/products/{clean_barcode}.png"

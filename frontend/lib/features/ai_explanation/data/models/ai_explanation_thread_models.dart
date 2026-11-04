@@ -289,5 +289,19 @@ class AiExplanationEngine {
       inShort: 'Always consult the full nutritional panel for personalized dietary requirements.',
     );
   }
-}
 
+  static AiStructuredResponse fromBackendAnswer({
+    required String answer,
+    required ProductDetailsResponse? product,
+    required String question,
+  }) {
+    final fallback = generateResponse(question: question, product: product);
+    final firstSentence = answer.contains('.') ? '${answer.split('.').first.trim()}.' : answer;
+    return AiStructuredResponse(
+      boldConclusion: firstSentence,
+      bodyText: answer,
+      keyReasons: fallback.keyReasons,
+      inShort: answer.length > 120 ? '${answer.substring(0, 120).trim()}...' : answer,
+    );
+  }
+}

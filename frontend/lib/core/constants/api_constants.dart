@@ -7,5 +7,6 @@ class ApiConstants {
   static const String trendingEndpoint = '$apiVersion/trending';
   static const String historyEndpoint = '$apiVersion/history';
   static const String historyInsightsEndpoint = '$apiVersion/history/insights';
+  static const String chatEndpoint = '$apiVersion/chat/product-qa';
   static const String healthEndpoint = '/health';
 }

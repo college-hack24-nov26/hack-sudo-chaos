@@ -27,6 +27,7 @@ flutter:
     - assets/
     - assets/images/
     - assets/images/categories/
+    - assets/images/products/
     - assets/backgrounds/
     - assets/illustrations/
     - assets/icons/

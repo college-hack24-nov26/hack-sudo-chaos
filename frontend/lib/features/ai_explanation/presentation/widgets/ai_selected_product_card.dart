@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import '../../../product_details/data/models/product_response_model.dart';
 
@@ -85,16 +86,13 @@ class _AiSelectedProductCardState extends State<AiSelectedProductCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Left Product Thumbnail (width: 72, height: 80)
-            SizedBox(
+            ProductPacketImage(
+              imageUrl: identity?.imageUrl,
+              barcode: identity?.barcode,
+              category: identity?.foodCategory,
               width: 72.0,
               height: 80.0,
-              child: identity?.imageUrl != null && identity!.imageUrl!.trim().isNotEmpty
-                  ? Image.network(
-                      identity.imageUrl!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => _buildFallbackThumbnail(),
-                    )
-                  : _buildFallbackThumbnail(),
+              fit: BoxFit.contain,
             ),
 
             const SizedBox(width: 14.0),
@@ -228,22 +226,6 @@ class _AiSelectedProductCardState extends State<AiSelectedProductCard> {
     );
   }
 
-  Widget _buildFallbackThumbnail() {
-    return Container(
-      width: 72.0,
-      height: 80.0,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.fastfood_rounded,
-        size: 34.0,
-        color: Color(0xFFAFA7B8),
-      ),
-    );
-  }
 }
 
 class _BadgeInfo {

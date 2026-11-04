@@ -27,14 +27,17 @@ from app.domain.engines.contracts import (
 from app.domain.engines.coordinator import (
     EvaluationCoordinator,
     EvaluationCoordinatorResult,
+    EvaluationRulesBundle,
 )
 from app.schemas.product_analysis import (
     ProductSummaryResponse,
     EnginePerformanceMetrics,
     ProductAnalysisResponse,
 )
-from app.schemas.frontend_adapter import build_frontend_sections
+from app.schemas.frontend_adapter import build_frontend_sections, AiExplanationModel
+from app.integrations.nvidia_nim import nvidia_nim_client
 from app.domain.curated_catalog import get_curated_product, get_curated_image_url
+from app.core.cache import product_cache
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +53,20 @@ class ProductService:
         product_repository: ProductRepository,
         evaluation_coordinator: Optional[EvaluationCoordinator] = None,
         off_client: Optional[OpenFoodFactsClient] = None,
+        enable_cache: bool = True,
     ) -> None:
         """
         Initializes ProductService with required dependencies.
+        Uses actual EvaluationCoordinator constructor and EvaluationRulesBundle.
         """
         self.repository = product_repository
-        self.coordinator = evaluation_coordinator or EvaluationCoordinator.get_default()
+        if evaluation_coordinator is not None:
+            self.coordinator = evaluation_coordinator
+        else:
+            rules_bundle = EvaluationRulesBundle.from_seed_files()
+            self.coordinator = EvaluationCoordinator(rules_bundle=rules_bundle)
         self.off_client = off_client or OpenFoodFactsClient()
+        self.enable_cache = enable_cache
 
     def get_product_by_barcode(self, barcode: str) -> Optional[Product]:
         """
@@ -167,6 +177,7 @@ class ProductService:
         barcode: str,
         extra_claims: Optional[List[DeclaredClaimInput]] = None,
         include_ai_explanation: bool = True,
+        use_cache: bool = True,
     ) -> Optional[ProductAnalysisResponse]:
         """
         Asynchronous product analysis with Open Food Facts fallback:
@@ -177,6 +188,15 @@ class ProductService:
         5. Executes EvaluationCoordinator across all 4 deterministic engines.
         6. Returns complete ProductAnalysisResponse.
         """
+        # Step 0: Check In-Memory Cache for Sub-Millisecond Response
+        cache_key = f"barcode:{barcode.strip()}:{include_ai_explanation}:{bool(extra_claims)}"
+        if self.enable_cache and use_cache:
+            cached_resp: Optional[ProductAnalysisResponse] = product_cache.get(cache_key)
+            if cached_resp is not None:
+                logger.info("In-memory cache HIT for barcode %s", barcode)
+                cached_resp.metrics.is_cached = True
+                return cached_resp
+
         t_total_start = time.perf_counter()
 
         # Step 1: Local Database Lookup
@@ -199,6 +219,8 @@ class ProductService:
             is_verified = bool(product.is_verified)
             if product.raw_source_payload and isinstance(product.raw_source_payload, dict):
                 image_url = product.raw_source_payload.get("image_front_url") or product.raw_source_payload.get("image_url")
+            if not image_url:
+                image_url = get_curated_image_url(barcode)
         else:
             # Local Database Miss -> Open Food Facts Fallback
             logger.info("Local DB miss for barcode %s. Invoking Open Food Facts fallback...", barcode)
@@ -208,17 +230,27 @@ class ProductService:
 
             if not off_resp.is_found:
                 logger.info("Open Food Facts lookup failed or product not found for barcode %s: %s", barcode, off_resp.status)
-                # Fallback to curated demonstration catalog if available
-                curated = get_curated_product(barcode)
-                if curated:
-                    logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
-                    domain_product = curated
+                # Fallback to local persistent dataset catalog (852 Indian items) or curated demonstration catalog
+                from app.core.persistent_store import persistent_store
+                catalog_item = persistent_store.get_catalog_product(barcode)
+                if catalog_item:
+                    logger.info("Resolved barcode %s from local Indian packaged foods catalog (SQLite).", barcode)
+                    domain_product = catalog_item
                     is_verified = True
                     is_persisted = False
-                    map_ms = 0.0
+                    map_ms = 0.5
                     image_url = get_curated_image_url(barcode)
                 else:
-                    return None
+                    curated = get_curated_product(barcode)
+                    if curated:
+                        logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
+                        domain_product = curated
+                        is_verified = True
+                        is_persisted = False
+                        map_ms = 0.0
+                        image_url = get_curated_image_url(barcode)
+                    else:
+                        return None
             else:
                 # Normalize external response into domain DTO
                 t_map_start = time.perf_counter()
@@ -285,12 +317,47 @@ class ProductService:
             include_ai_explanation=include_ai_explanation,
         )
 
-        return ProductAnalysisResponse(
+        # Enrich with NVIDIA NIM AI explanation if configured
+        if include_ai_explanation and nvidia_nim_client.is_configured:
+            try:
+                prod_info = {
+                    "product_name": domain_product.product_name,
+                    "brand_name": domain_product.brand_name,
+                    "food_form": domain_product.food_form,
+                    "food_category": domain_product.food_category,
+                    "nutrients": [
+                        {
+                            "nutrient_code": n.nutrient_code,
+                            "per_100_value": float(n.per_100g_value) if n.per_100g_value is not None else None,
+                            "unit": n.declared_unit,
+                        }
+                        for n in (domain_product.nutrients or [])
+                    ],
+                    "declared_allergens": fe_sections["ingredient_analysis"].declared_allergens if fe_sections.get("ingredient_analysis") else [],
+                    "ingredients_summary": fe_sections["ingredient_analysis"].ingredients_summary if fe_sections.get("ingredient_analysis") else "",
+                    "key_findings": [k.model_dump() for k in (fe_sections.get("key_findings") or [])],
+                }
+                expl_text, provider, is_fb = await nvidia_nim_client.generate_product_explanation(
+                    prod_info, barcode=domain_product.barcode
+                )
+                fe_sections["ai_explanation"] = AiExplanationModel(
+                    provider=provider,
+                    is_fallback=is_fb,
+                    text=expl_text,
+                )
+            except Exception as e:
+                logger.warning("NVIDIA NIM explanation enrichment skipped: %s", e)
+
+        analysis_res = ProductAnalysisResponse(
             product=summary,
             nutrition_evaluation=coord_result.nutrition_evaluation,
             icmr_hfss_evaluation=coord_result.icmr_hfss_evaluation,
             claims_evaluation=coord_result.claims_evaluation,
             ingredient_evaluation=coord_result.ingredient_evaluation,
+            engine_failures=coord_result.engine_failures,
+            summary=coord_result.summary,
+            nutrients=domain_product.nutrients,
+            ingredients=domain_product.ingredients,
             metrics=metrics,
             nutritional_interpretation=fe_sections["nutritional_interpretation"],
             regulatory_claims_validation=fe_sections["regulatory_claims_validation"],
@@ -299,16 +366,47 @@ class ProductService:
             ai_explanation=fe_sections["ai_explanation"],
         )
 
+        # Record scan into permanent SQLite storage (survives app restarts)
+        try:
+            from app.core.persistent_store import persistent_store
+            kf_title = fe_sections["key_findings"][0].title if fe_sections.get("key_findings") else None
+            kf_sev = fe_sections["key_findings"][0].severity if fe_sections.get("key_findings") else "MODERATE"
+            persistent_store.record_scan(
+                barcode=barcode.strip(),
+                product_name=summary.product_name,
+                brand_name=summary.brand_name,
+                food_category=summary.food_category,
+                image_url=summary.image_url,
+                key_finding=kf_title,
+                key_finding_severity=kf_sev,
+            )
+        except Exception as e:
+            logger.debug("Failed to record scan in persistent store: %s", e)
+
+        if self.enable_cache and use_cache:
+            product_cache.set(cache_key, analysis_res)
+        return analysis_res
+
     def analyze_product_by_barcode(
         self,
         barcode: str,
         extra_claims: Optional[List[DeclaredClaimInput]] = None,
         include_ai_explanation: bool = True,
+        use_cache: bool = True,
     ) -> Optional[ProductAnalysisResponse]:
         """
         Synchronous variant of analyze_product_by_barcode.
         Uses synchronous OFF client if a local database miss occurs.
         """
+        # Step 0: Check In-Memory Cache for Sub-Millisecond Response
+        cache_key = f"barcode:{barcode.strip()}:{include_ai_explanation}:{bool(extra_claims)}"
+        if self.enable_cache and use_cache:
+            cached_resp: Optional[ProductAnalysisResponse] = product_cache.get(cache_key)
+            if cached_resp is not None:
+                logger.info("In-memory cache HIT for barcode %s", barcode)
+                cached_resp.metrics.is_cached = True
+                return cached_resp
+
         t_total_start = time.perf_counter()
 
         # Step 1: Local Database Lookup
@@ -331,6 +429,8 @@ class ProductService:
             is_verified = bool(product.is_verified)
             if product.raw_source_payload and isinstance(product.raw_source_payload, dict):
                 image_url = product.raw_source_payload.get("image_front_url") or product.raw_source_payload.get("image_url")
+            if not image_url:
+                image_url = get_curated_image_url(barcode)
         else:
             # Local Database Miss -> Open Food Facts Fallback (Sync)
             logger.info("Local DB miss for barcode %s. Invoking synchronous OFF fallback...", barcode)
@@ -340,17 +440,27 @@ class ProductService:
 
             if not off_resp.is_found:
                 logger.info("Open Food Facts lookup failed or product not found for barcode %s", barcode)
-                # Fallback to curated demonstration catalog if available
-                curated = get_curated_product(barcode)
-                if curated:
-                    logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
-                    domain_product = curated
+                # Fallback to local persistent dataset catalog (852 Indian items) or curated demonstration catalog
+                from app.core.persistent_store import persistent_store
+                catalog_item = persistent_store.get_catalog_product(barcode)
+                if catalog_item:
+                    logger.info("Resolved barcode %s from local Indian packaged foods catalog (SQLite).", barcode)
+                    domain_product = catalog_item
                     is_verified = True
                     is_persisted = False
-                    map_ms = 0.0
+                    map_ms = 0.5
                     image_url = get_curated_image_url(barcode)
                 else:
-                    return None
+                    curated = get_curated_product(barcode)
+                    if curated:
+                        logger.info("Resolved barcode %s from curated demonstration catalog.", barcode)
+                        domain_product = curated
+                        is_verified = True
+                        is_persisted = False
+                        map_ms = 0.0
+                        image_url = get_curated_image_url(barcode)
+                    else:
+                        return None
             else:
                 t_map_start = time.perf_counter()
                 domain_product = ExternalProductNormalizer.to_domain_dto(
@@ -414,12 +524,16 @@ class ProductService:
             include_ai_explanation=include_ai_explanation,
         )
 
-        return ProductAnalysisResponse(
+        analysis_res = ProductAnalysisResponse(
             product=summary,
             nutrition_evaluation=coord_result.nutrition_evaluation,
             icmr_hfss_evaluation=coord_result.icmr_hfss_evaluation,
             claims_evaluation=coord_result.claims_evaluation,
             ingredient_evaluation=coord_result.ingredient_evaluation,
+            engine_failures=coord_result.engine_failures,
+            summary=coord_result.summary,
+            nutrients=domain_product.nutrients,
+            ingredients=domain_product.ingredients,
             metrics=metrics,
             nutritional_interpretation=fe_sections["nutritional_interpretation"],
             regulatory_claims_validation=fe_sections["regulatory_claims_validation"],
@@ -427,3 +541,24 @@ class ProductService:
             key_findings=fe_sections["key_findings"],
             ai_explanation=fe_sections["ai_explanation"],
         )
+
+        # Record scan into permanent SQLite storage (survives app restarts)
+        try:
+            from app.core.persistent_store import persistent_store
+            kf_title = fe_sections["key_findings"][0].title if fe_sections.get("key_findings") else None
+            kf_sev = fe_sections["key_findings"][0].severity if fe_sections.get("key_findings") else "MODERATE"
+            persistent_store.record_scan(
+                barcode=barcode.strip(),
+                product_name=summary.product_name,
+                brand_name=summary.brand_name,
+                food_category=summary.food_category,
+                image_url=summary.image_url,
+                key_finding=kf_title,
+                key_finding_severity=kf_sev,
+            )
+        except Exception as e:
+            logger.debug("Failed to record scan in persistent store: %s", e)
+
+        if self.enable_cache and use_cache:
+            product_cache.set(cache_key, analysis_res)
+        return analysis_res

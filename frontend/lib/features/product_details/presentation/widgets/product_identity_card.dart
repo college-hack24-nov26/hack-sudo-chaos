@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/product_packet_image.dart';
 import '../../data/models/product_response_model.dart';
 
 class ProductIdentityCard extends StatelessWidget {
@@ -27,7 +28,7 @@ class ProductIdentityCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Image or Neutral Placeholder
-          _ProductThumbnail(imageUrl: product.imageUrl),
+          _ProductThumbnail(imageUrl: product.imageUrl, barcode: product.barcode, category: product.foodCategory),
           const SizedBox(width: AppSpacing.md),
           // Product Info
           Expanded(
@@ -145,55 +146,25 @@ class ProductIdentityCard extends StatelessWidget {
 
 class _ProductThumbnail extends StatelessWidget {
   final String? imageUrl;
+  final String? barcode;
+  final String? category;
 
-  const _ProductThumbnail({this.imageUrl});
+  const _ProductThumbnail({this.imageUrl, this.barcode, this.category});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ProductPacketImage(
+      imageUrl: imageUrl,
+      barcode: barcode,
+      category: category,
       width: 76.0,
       height: 76.0,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.border, width: 0.8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: (imageUrl != null && imageUrl!.trim().isNotEmpty)
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const _PlaceholderIcon(),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const Center(
-                  child: SizedBox(
-                    width: 20.0,
-                    height: 20.0,
-                    child: CircularProgressIndicator(strokeWidth: 2.0, color: AppColors.brandOrange),
-                  ),
-                );
-              },
-            )
-          : const _PlaceholderIcon(),
+      fit: BoxFit.contain,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
     );
   }
 }
 
-class _PlaceholderIcon extends StatelessWidget {
-  const _PlaceholderIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Icon(
-        Icons.inventory_2_outlined,
-        size: 32.0,
-        color: AppColors.textTertiary,
-      ),
-    );
-  }
-}
 
 class _CategoryChip extends StatelessWidget {
   final String label;

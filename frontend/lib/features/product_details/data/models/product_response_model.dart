@@ -1,3 +1,15 @@
+double? _toDouble(dynamic val) {
+  if (val == null) return null;
+  if (val is num) return val.toDouble();
+  return double.tryParse(val.toString());
+}
+
+int? _toInt(dynamic val) {
+  if (val == null) return null;
+  if (val is num) return val.toInt();
+  return int.tryParse(val.toString());
+}
+
 class ProductDetailsResponse {
   final ProductIdentity product;
   final NutritionalInterpretation? nutritionalInterpretation;
@@ -237,7 +249,7 @@ class ProductIdentity {
       productName: json['product_name']?.toString() ?? 'Unknown Product',
       brandName: json['brand_name']?.toString(),
       packageSize: json['package_size']?.toString(),
-      servingSizeValue: (json['serving_size_value'] as num?)?.toDouble(),
+      servingSizeValue: _toDouble(json['serving_size_value']),
       servingSizeUnit: json['serving_size_unit']?.toString(),
       foodForm: json['food_form']?.toString() ?? 'solid',
       foodCategory: json['food_category']?.toString(),
@@ -326,17 +338,17 @@ class NutrientItem {
     return NutrientItem(
       nutrientCode: json['nutrient_code']?.toString() ?? '',
       displayName: json['display_name']?.toString() ?? '',
-      valuePer100g: (json['value_per_100g'] as num?)?.toDouble(),
-      valuePerServing: (json['value_per_serving'] as num?)?.toDouble(),
+      valuePer100g: _toDouble(json['value_per_100g']),
+      valuePerServing: _toDouble(json['value_per_serving']),
       unit: json['unit']?.toString() ?? 'g',
-      rdaPercentage: (json['rda_percentage'] as num?)?.toDouble(),
+      rdaPercentage: _toDouble(json['rda_percentage']),
       classification: json['classification']?.toString(),
       concernLevel: json['concern_level']?.toString(),
       status: json['status']?.toString() ?? 'PRESENT',
       explanation: json['explanation']?.toString(),
-      lowThresholdMax: (json['low_threshold_max'] as num?)?.toDouble(),
-      moderateThresholdMax: (json['moderate_threshold_max'] as num?)?.toDouble(),
-      highThresholdMin: (json['high_threshold_min'] as num?)?.toDouble(),
+      lowThresholdMax: _toDouble(json['low_threshold_max']),
+      moderateThresholdMax: _toDouble(json['moderate_threshold_max']),
+      highThresholdMin: _toDouble(json['high_threshold_min']),
     );
   }
 }
@@ -391,8 +403,8 @@ class RegulatoryClaimItem {
       claimCode: json['claim_code']?.toString() ?? '',
       claimName: json['claim_name']?.toString() ?? '',
       status: json['status']?.toString() ?? 'NOT_EVALUATED',
-      actualValue: (json['actual_value'] as num?)?.toDouble(),
-      requiredThreshold: (json['required_threshold'] as num?)?.toDouble(),
+      actualValue: _toDouble(json['actual_value']),
+      requiredThreshold: _toDouble(json['required_threshold']),
       unit: json['unit']?.toString(),
       regulatoryReference: json['regulatory_reference']?.toString(),
       explanation: json['explanation']?.toString(),
@@ -417,7 +429,7 @@ class IngredientAnalysis {
 
   factory IngredientAnalysis.fromJson(Map<String, dynamic> json) {
     return IngredientAnalysis(
-      totalIngredientsCount: json['total_ingredients_count'] as int? ?? 0,
+      totalIngredientsCount: _toInt(json['total_ingredients_count']) ?? 0,
       ingredientsSummary: json['ingredients_summary']?.toString(),
       declaredAllergens: (json['declared_allergens'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -452,7 +464,7 @@ class IngredientCategory {
     return IngredientCategory(
       category: json['category']?.toString() ?? '',
       categoryName: json['category_name']?.toString() ?? json['category']?.toString() ?? '',
-      count: json['count'] as int? ?? 0,
+      count: _toInt(json['count']) ?? 0,
       items: (json['items'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
@@ -503,6 +515,7 @@ class AiExplanation {
     );
   }
 }
+<<<<<<< Updated upstream
 
 
 
@@ -515,3 +528,5 @@ class ProductDataFieldStatus {
     required this.isAvailable,
   });
 }
+=======
+>>>>>>> Stashed changes

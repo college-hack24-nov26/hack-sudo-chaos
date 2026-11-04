@@ -53,7 +53,7 @@ class _ProductLoadingScreenState extends ConsumerState<ProductLoadingScreen> {
 
     try {
       final repo = ref.read(productRepositoryProvider);
-      final productDetails = await repo.getProductByBarcode(barcode);
+      await repo.getProductByBarcode(barcode);
 
       if (_isCancelled || !mounted) return;
 

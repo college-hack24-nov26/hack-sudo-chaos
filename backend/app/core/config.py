@@ -92,6 +92,22 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 1800  # Recycle connections after 30 minutes to prevent stale sockets
 
+    # NVIDIA NIM AI Configuration
+    NVIDIA_API_KEY: Optional[str] = Field(
+        default=None,
+        description="NVIDIA NIM API key for LLM explanations and topic-controlled chatbot."
+    )
+    NVIDIA_MODEL_NAME: str = Field(
+        default="nvidia/llama-3.1-nemoguard-8b-topic-control",
+        description="NVIDIA NIM model identifier."
+    )
+    NVIDIA_BASE_URL: str = Field(
+        default="https://integrate.api.nvidia.com/v1",
+        description="NVIDIA NIM base URL endpoint."
+    )
+    NVIDIA_MAX_TOKENS: int = 512
+    NVIDIA_TEMPERATURE: float = 0.2
+
     @field_validator("DATABASE_URL", "ALEMBIC_DATABASE_URL", "TEST_DATABASE_URL", mode="before")
     @classmethod
     def validate_and_normalize_url(cls, v: Optional[str]) -> Optional[str]:

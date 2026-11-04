@@ -10,7 +10,15 @@ from decimal import Decimal
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
 
-from app.domain.engines.contracts import EngineBatchResult
+from app.domain.engines.contracts import (
+    EngineBatchResult,
+    NutrientObservationInput,
+    IngredientObservationInput,
+)
+from app.domain.engines.coordinator import (
+    EngineFailureRecord,
+    CoordinatorSummaryCounts,
+)
 from app.schemas.frontend_adapter import (
     NutritionalInterpretationModel,
     RegulatoryClaimsValidationModel,
@@ -52,18 +60,36 @@ class EnginePerformanceMetrics(BaseModel):
     claims_engine_ms: float = Field(..., description="Claims engine evaluation time in milliseconds")
     ingredient_engine_ms: float = Field(..., description="Ingredient engine evaluation time in milliseconds")
     total_analysis_ms: float = Field(..., description="Total end-to-end execution time in milliseconds")
+    is_cached: bool = Field(False, description="Whether this response was served from in-memory cache")
 
 
 class ProductAnalysisResponse(BaseModel):
     """
     Complete analysis payload returned by ProductService and API endpoints.
-    Fully compatible with Flutter client rendering models.
+    Fully compatible with Flutter client rendering models, while preserving
+    canonical engine results, engine execution failures, and outcome summaries.
     """
     product: ProductSummaryResponse
-    nutrition_evaluation: EngineBatchResult
-    icmr_hfss_evaluation: EngineBatchResult
-    claims_evaluation: EngineBatchResult
-    ingredient_evaluation: EngineBatchResult
+    nutrition_evaluation: Optional[EngineBatchResult] = Field(None, description="Result of NutritionEngine evaluation")
+    icmr_hfss_evaluation: Optional[EngineBatchResult] = Field(None, description="Result of ICMRHFSSEngine evaluation")
+    claims_evaluation: Optional[EngineBatchResult] = Field(None, description="Result of ClaimsEngine evaluation")
+    ingredient_evaluation: Optional[EngineBatchResult] = Field(None, description="Result of IngredientEngine evaluation")
+    engine_failures: List[EngineFailureRecord] = Field(
+        default_factory=list,
+        description="Isolated engine execution failures (never mixed into regulatory outcomes)"
+    )
+    summary: Optional[CoordinatorSummaryCounts] = Field(
+        default=None,
+        description="Objective aggregate rule outcome counts across all successfully executed engines"
+    )
+    nutrients: Optional[Dict[str, NutrientObservationInput]] = Field(
+        default=None,
+        description="Standardized nutrient observations evaluated by the engines"
+    )
+    ingredients: Optional[List[IngredientObservationInput]] = Field(
+        default=None,
+        description="Standardized ingredient observations evaluated by the engines"
+    )
     metrics: EnginePerformanceMetrics
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

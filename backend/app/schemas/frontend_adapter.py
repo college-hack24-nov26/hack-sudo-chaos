@@ -308,6 +308,23 @@ def build_frontend_sections(
         disp_name = NUTRIENT_DISPLAY_NAMES.get(slug, slug.replace("_", " ").title())
         val_100 = float(obs.per_100g_value) if obs.per_100g_value is not None else None
         val_serving = float(obs.per_serving_value) if obs.per_serving_value is not None else None
+
+        # Explicit per-serving conversion with verified serving weight
+        if val_serving is None and val_100 is not None and domain_product.serving_size_value:
+            try:
+                serving_weight = float(domain_product.serving_size_value)
+                if serving_weight > 0:
+                    val_serving = round((val_100 * serving_weight) / 100.0, 2)
+            except (ValueError, TypeError):
+                pass
+        elif val_100 is None and val_serving is not None and domain_product.serving_size_value:
+            try:
+                serving_weight = float(domain_product.serving_size_value)
+                if serving_weight > 0:
+                    val_100 = round((val_serving * 100.0) / serving_weight, 2)
+            except (ValueError, TypeError):
+                pass
+
         rda_pct = rdi_percentages.get(slug)
 
         # Automatic bi-directional serving conversion when verified serving size is available:

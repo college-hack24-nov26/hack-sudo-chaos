@@ -88,8 +88,8 @@ def evaluate_nutrition(
             )
             continue
 
-        # If reference RDI exists and value is present, calculate % contribution
-        if ref and obs.per_100g_value is not None:
+        # If reference RDI exists with a non-null numeric value, calculate % contribution
+        if ref and ref.get("value") is not None and obs.per_100g_value is not None:
             rdi_val = ref["value"]
             val_100 = obs.per_100g_value
             pct_100 = (val_100 / rdi_val) * Decimal("100.0")

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -221,7 +222,7 @@ class _RecentScanRow extends StatelessWidget {
           child: Row(
             children: [
               // 1. Product Thumbnail
-              _ScanThumbnail(imageUrl: item.imageUrl),
+              _ScanThumbnail(imageUrl: item.imageUrl, barcode: item.barcode),
               const SizedBox(width: 12.0),
 
               // 2. Product Name & Category / Scan Time
@@ -282,35 +283,20 @@ class _RecentScanRow extends StatelessWidget {
 
 class _ScanThumbnail extends StatelessWidget {
   final String? imageUrl;
+  final String? barcode;
 
-  const _ScanThumbnail({this.imageUrl});
+  const _ScanThumbnail({this.imageUrl, this.barcode});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ProductPacketImage(
+      imageUrl: imageUrl,
+      barcode: barcode,
       width: 38.0,
       height: 38.0,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAF6F2),
-        borderRadius: BorderRadius.circular(10.0),
-        border: Border.all(color: const Color(0xFFEAE3DB), width: 0.8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: (imageUrl != null && imageUrl!.trim().isNotEmpty)
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.inventory_2_outlined,
-                size: 18.0,
-                color: Color(0xFF8E8A93),
-              ),
-            )
-          : const Icon(
-              Icons.inventory_2_outlined,
-              size: 18.0,
-              color: Color(0xFF8E8A93),
-            ),
+      fit: BoxFit.contain,
+      borderRadius: BorderRadius.circular(10.0),
+      backgroundColor: const Color(0xFFFAF6F2),
     );
   }
 }

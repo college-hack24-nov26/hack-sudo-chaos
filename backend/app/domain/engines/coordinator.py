@@ -83,7 +83,8 @@ class EvaluationRulesBundle(BaseModel):
     @classmethod
     def from_seed_files(cls, seed_dir: Optional[str] = None) -> "EvaluationRulesBundle":
         """
-        Loads verified statutory rule datasets from local JSON seed files.
+        Loads all seven verified statutory rule datasets and catalogues from local JSON seed files.
+        Never silently replaces unavailable required rules with permissive empty defaults.
         """
         if seed_dir is None:
             base_dir = os.path.normpath(
@@ -94,17 +95,41 @@ class EvaluationRulesBundle(BaseModel):
         def _load(filename: str) -> Any:
             path = os.path.join(seed_dir, filename)
             if not os.path.exists(path):
-                logger.warning("Seed dataset file not found: %s", path)
-                return {} if filename.endswith("synonyms_seed.json") else []
+                raise FileNotFoundError(f"Required regulatory seed file not found: {path}")
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
 
+        raw_nutrients = _load("canonical_nutrients_seed.json")
+        nutrition_cat: Optional[Dict[str, Any]] = None
+        if raw_nutrients and isinstance(raw_nutrients, list):
+            nutrition_cat = {
+                item["nutrient_code"]: {
+                    "rdi_value": Decimal(str(item["fssai_standard_daily_rdi"])),
+                    "value": Decimal(str(item["fssai_standard_daily_rdi"])),
+                    "unit": item.get("standard_unit"),
+                    "display_name": item.get("display_name"),
+                }
+                for item in raw_nutrients
+                if isinstance(item, dict) and "nutrient_code" in item and item.get("fssai_standard_daily_rdi") is not None
+            }
+
+        raw_ingredients = _load("canonical_ingredients_seed.json")
+        ingredient_cat: Optional[Dict[str, Any]] = None
+        if raw_ingredients and isinstance(raw_ingredients, list):
+            ingredient_cat = {
+                item["ingredient_code"]: item
+                for item in raw_ingredients
+                if isinstance(item, dict) and "ingredient_code" in item
+            }
+
         return cls(
+            nutrition_catalogue=nutrition_cat,
             icmr_threshold_rules=_load("icmr_table_15_1_seed.json"),
             icmr_matrix_rules=_load("icmr_table_15_2_seed.json"),
             claims_rules=_load("fssai_schedule_i_claims_seed.json"),
             synonym_registry=_load("fssai_schedule_ii_synonyms_seed.json"),
             ingredient_rules=_load("ingredient_rules_seed.json"),
+            ingredient_catalogue=ingredient_cat,
         )
 
     @classmethod
@@ -221,7 +246,7 @@ class EvaluationCoordinator:
         Initialize coordinator with regulatory rules bundle and optional injected runners.
         """
         if rules_bundle is None:
-            self.rules_bundle = EvaluationRulesBundle()
+            self.rules_bundle = EvaluationRulesBundle.from_seed_files()
         elif isinstance(rules_bundle, dict):
             self.rules_bundle = EvaluationRulesBundle(**rules_bundle)
         elif isinstance(rules_bundle, EvaluationRulesBundle):

@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../product_details/data/models/product_response_model.dart';
+import '../../../product_details/presentation/providers/product_details_provider.dart';
 import '../../data/models/ai_explanation_thread_models.dart';
 
 final aiSelectedProductProvider = StateProvider<ProductDetailsResponse?>((ref) => null);
 
 class AiChatNotifier extends StateNotifier<List<AiChatMessage>> {
-  AiChatNotifier() : super([]);
+  final ApiClient _apiClient;
+
+  AiChatNotifier(this._apiClient) : super([]);
 
   void resetSession() {
     state = [];
@@ -29,14 +34,43 @@ class AiChatNotifier extends StateNotifier<List<AiChatMessage>> {
     );
     state = [...state, loadingMsg];
 
-    // Simulate realistic async response time (500ms)
-    await Future.delayed(const Duration(milliseconds: 500));
-
     try {
-      final response = AiExplanationEngine.generateResponse(
-        question: cleanQ,
-        product: product,
-      );
+      AiStructuredResponse response;
+      if (product != null && product.product.barcode.isNotEmpty) {
+        try {
+          final res = await _apiClient.post(
+            ApiConstants.chatEndpoint,
+            data: {
+              'barcode': product.product.barcode,
+              'question': cleanQ,
+            },
+          );
+          final answer = res['answer']?.toString();
+          if (answer != null && answer.isNotEmpty) {
+            response = AiExplanationEngine.fromBackendAnswer(
+              answer: answer,
+              product: product,
+              question: cleanQ,
+            );
+          } else {
+            response = AiExplanationEngine.generateResponse(
+              question: cleanQ,
+              product: product,
+            );
+          }
+        } catch (_) {
+          // Gracefully fall back to local rule-based explanation
+          response = AiExplanationEngine.generateResponse(
+            question: cleanQ,
+            product: product,
+          );
+        }
+      } else {
+        response = AiExplanationEngine.generateResponse(
+          question: cleanQ,
+          product: product,
+        );
+      }
 
       final answeredMsg = AiChatMessage(
         id: id,
@@ -69,6 +103,6 @@ class AiChatNotifier extends StateNotifier<List<AiChatMessage>> {
 
 final aiChatMessagesProvider =
     StateNotifierProvider<AiChatNotifier, List<AiChatMessage>>((ref) {
-  return AiChatNotifier();
+  final apiClient = ref.watch(apiClientProvider);
+  return AiChatNotifier(apiClient);
 });
-

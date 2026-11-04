@@ -1,3 +1,4 @@
+import '../../../../core/widgets/product_packet_image.dart';
 import 'package:flutter/material.dart';
 import '../../../product_details/data/models/product_response_model.dart';
 
@@ -249,17 +250,12 @@ class ComparisonProductCards extends StatelessWidget {
         ),
 
         // Center Product Image (height: 92)
-        SizedBox(
+        ProductPacketImage(
+          imageUrl: identity.imageUrl,
+          barcode: identity.barcode,
+          category: identity.foodCategory,
           height: 92.0,
-          child: Center(
-            child: identity.imageUrl != null && identity.imageUrl!.trim().isNotEmpty
-                ? Image.network(
-                    identity.imageUrl!,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => _buildFallbackImage(),
-                  )
-                : _buildFallbackImage(),
-          ),
+          fit: BoxFit.contain,
         ),
 
         const SizedBox(height: 10.0),
@@ -340,20 +336,4 @@ class ComparisonProductCards extends StatelessWidget {
     );
   }
 
-  Widget _buildFallbackImage() {
-    return Container(
-      width: 72.0,
-      height: 72.0,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.fastfood_rounded,
-        size: 34.0,
-        color: Color(0xFFAAA1B2),
-      ),
-    );
-  }
 }
