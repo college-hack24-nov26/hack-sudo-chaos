@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exceptions.dart';
@@ -57,7 +59,7 @@ class HomeRepositoryImpl implements HomeRepository {
       }
 
       // 5. Verify and map each item in the list
-      return rawItems.map((e) {
+      final items = rawItems.map((e) {
         if (e is! Map<String, dynamic>) {
           throw InvalidResponseException(
             message: 'Each entry in "items" must be a JSON object, but got ${e.runtimeType}.',
@@ -67,19 +69,31 @@ class HomeRepositoryImpl implements HomeRepository {
         }
         return ScanHistoryItem.fromJson(e);
       }).toList();
-    } on NotFoundException {
-      // HTTP 404: Resource or endpoint not found on server
-      rethrow;
-    } on ServerException {
-      // HTTP 500 / 5xx: Backend internal server error
-      rethrow;
-    } on NetworkException {
-      // Network failure / Connection unreachable
-      rethrow;
-    } on InvalidResponseException {
-      // Malformed JSON / missing structure
-      rethrow;
+
+      // Persist to local device cache for offline availability
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final encoded = jsonEncode(items.map((i) => i.toJson()).toList());
+        await prefs.setString('yumsure_recent_scans_cache', encoded);
+      } catch (_) {}
+
+      return items;
     } catch (e) {
+      // Fallback to local device cache when backend is offline or network fails
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final cached = prefs.getString('yumsure_recent_scans_cache');
+        if (cached != null && cached.trim().isNotEmpty) {
+          final decoded = jsonDecode(cached);
+          if (decoded is List) {
+            return decoded
+                .whereType<Map<String, dynamic>>()
+                .map((e) => ScanHistoryItem.fromJson(e))
+                .toList();
+          }
+        }
+      } catch (_) {}
+
       if (e is ApiException) rethrow;
       throw ApiException(message: 'Unexpected error fetching scan history: $e');
     }

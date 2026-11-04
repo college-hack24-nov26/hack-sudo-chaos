@@ -64,22 +64,31 @@ class ProductRepository:
         if not clean_barcode:
             return None
 
-        target_barcode = BARCODE_ALIASES.get(clean_barcode, clean_barcode)
-        stmt = (
-            select(Product)
-            .where(Product.barcode.in_([clean_barcode, target_barcode]))
-            .order_by(Product.is_verified.desc())
-        )
-
+        # 1. First priority: Exact requested barcode match
+        stmt = select(Product).where(Product.barcode == clean_barcode)
         if load_relationships:
             stmt = stmt.options(
                 joinedload(Product.data_source),
                 selectinload(Product.nutrients).joinedload(ProductNutrient.nutrient),
                 selectinload(Product.ingredients).joinedload(ProductIngredient.ingredient),
             )
+        product = self.session.execute(stmt).scalars().first()
+        if product:
+            return product
 
-        result = self.session.execute(stmt)
-        return result.scalars().first()
+        # 2. Second priority: Alias fallback if candidate barcode was passed
+        target_barcode = BARCODE_ALIASES.get(clean_barcode)
+        if target_barcode and target_barcode != clean_barcode:
+            stmt_alias = select(Product).where(Product.barcode == target_barcode)
+            if load_relationships:
+                stmt_alias = stmt_alias.options(
+                    joinedload(Product.data_source),
+                    selectinload(Product.nutrients).joinedload(ProductNutrient.nutrient),
+                    selectinload(Product.ingredients).joinedload(ProductIngredient.ingredient),
+                )
+            return self.session.execute(stmt_alias).scalars().first()
+
+        return None
 
     def get_by_id(
         self,

@@ -125,7 +125,25 @@ async def get_root_openapi():
 import os
 from fastapi.staticfiles import StaticFiles
 
-# Mount static directory for local cropped product packet images
+# Dynamic Product Packet Image Resolver & Static Fallback
+from fastapi import Response, Depends
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.services.image_service import image_service
+
+@app.get("/static/products/{filename}", tags=["Media"])
+async def serve_static_product_image(filename: str, db: Session = Depends(get_db)):
+    barcode = filename.split(".")[0].strip()
+    img_bytes, media_type = await image_service.resolve_and_cache_image(barcode=barcode, db=db)
+    if img_bytes:
+        return Response(
+            content=img_bytes,
+            media_type=media_type,
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
+    return Response(status_code=404)
+
+# Mount static directory for other static assets
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")

@@ -49,13 +49,25 @@ class NvidiaNIMClient:
     """
 
     def __init__(self):
-        self.api_key: Optional[str] = (
+        self.nvidia_api_key: Optional[str] = (
             settings.NVIDIA_API_KEY or os.environ.get("NVIDIA_API_KEY")
         )
-        self.base_url: str = settings.NVIDIA_BASE_URL.rstrip("/")
-        self.model_name: str = settings.NVIDIA_MODEL_NAME
+        self.nvidia_base_url: str = settings.NVIDIA_BASE_URL.rstrip("/")
+        self.nvidia_model_name: str = settings.NVIDIA_MODEL_NAME
+
+        self.llama_api_key: Optional[str] = (
+            settings.LLAMA_API_KEY or os.environ.get("LLAMA_API_KEY")
+        )
+        self.llama_base_url: str = settings.LLAMA_BASE_URL.rstrip("/")
+        self.llama_model_name: str = settings.LLAMA_MODEL_NAME
+
         self.max_tokens: int = settings.NVIDIA_MAX_TOKENS
         self.temperature: float = settings.NVIDIA_TEMPERATURE
+
+        # Backwards compatibility properties
+        self.api_key = self.nvidia_api_key or self.llama_api_key
+        self.base_url = self.nvidia_base_url
+        self.model_name = self.nvidia_model_name
         
         # In-memory QA and explanation cache: (barcode, query_hash) -> answer_dict
         self._cache: Dict[str, Dict[str, Any]] = {}
@@ -64,8 +76,81 @@ class NvidiaNIMClient:
 
     @property
     def is_configured(self) -> bool:
-        """Returns True if a valid API key is present."""
-        return bool(self.api_key and len(self.api_key.strip()) > 10)
+        """Returns True if either NVIDIA NIM or direct Llama API key is present."""
+        has_nvidia = bool(self.nvidia_api_key and len(self.nvidia_api_key.strip()) > 10)
+        has_llama = bool(self.llama_api_key and len(self.llama_api_key.strip()) > 10)
+        return has_nvidia or has_llama
+
+    async def _call_llm_api(self, messages: List[Dict[str, str]]) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Calls LLM with automatic multi-provider failover:
+        1. NVIDIA NIM (llama-3.1-nemoguard-8b-topic-control)
+        2. Direct Llama provider (Groq / OpenRouter / Together / Meta)
+        Returns: (generated_text, provider_name) or (None, None)
+        """
+        # 1. Try NVIDIA NIM first if configured
+        if self.nvidia_api_key and len(self.nvidia_api_key.strip()) > 10:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {self.nvidia_api_key.strip()}",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "model": self.nvidia_model_name,
+                    "messages": messages,
+                    "temperature": self.temperature,
+                    "max_tokens": self.max_tokens,
+                }
+                async with httpx.AsyncClient(timeout=20.0) as client:
+                    resp = await client.post(
+                        f"{self.nvidia_base_url}/chat/completions",
+                        headers=headers,
+                        json=payload,
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        choices = data.get("choices", [])
+                        if choices and "message" in choices[0]:
+                            msg = choices[0]["message"]
+                            raw_content = msg.get("content") or msg.get("reasoning_content")
+                            if raw_content and str(raw_content).strip():
+                                return str(raw_content).strip(), "nvidia_nim"
+                    logger.warning("NVIDIA NIM returned HTTP %s. Attempting failover if available.", resp.status_code)
+            except Exception as exc:
+                logger.warning("NVIDIA NIM call failed: %s. Attempting failover.", exc)
+
+        # 2. Try Direct Llama provider if configured
+        if self.llama_api_key and len(self.llama_api_key.strip()) > 10:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {self.llama_api_key.strip()}",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "model": self.llama_model_name,
+                    "messages": messages,
+                    "temperature": self.temperature,
+                    "max_tokens": self.max_tokens,
+                }
+                async with httpx.AsyncClient(timeout=20.0) as client:
+                    resp = await client.post(
+                        f"{self.llama_base_url}/chat/completions",
+                        headers=headers,
+                        json=payload,
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        choices = data.get("choices", [])
+                        if choices and "message" in choices[0]:
+                            msg = choices[0]["message"]
+                            raw_content = msg.get("content") or msg.get("reasoning_content")
+                            if raw_content and str(raw_content).strip():
+                                return str(raw_content).strip(), "llama_provider"
+                    logger.warning("Llama direct API returned HTTP %s.", resp.status_code)
+            except Exception as exc:
+                logger.warning("Llama direct call failed: %s.", exc)
+
+        return None, None
 
     def _build_product_grounding_context(self, product_data: Dict[str, Any]) -> str:
         """
@@ -161,48 +246,19 @@ class NvidiaNIMClient:
 
         user_prompt = f"FACTSHEET:\n{grounding}\n\nPlease generate the consumer explanation."
 
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key.strip()}",
-                "Content-Type": "application/json",
-            }
-            payload = {
-                "model": self.model_name,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                "temperature": self.temperature,
-                "max_tokens": self.max_tokens,
-            }
-
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    choices = data.get("choices", [])
-                    if choices and "message" in choices[0]:
-                        explanation = choices[0]["message"]["content"].strip()
-                        if barcode:
-                            self._cache[cache_key] = {
-                                "text": explanation,
-                                "provider": "nvidia_nim_nemoguard",
-                                "is_fallback": False,
-                            }
-                        return explanation, "nvidia_nim_nemoguard", False
-
-                logger.warning(
-                    "NVIDIA NIM API returned HTTP %s for product explanation: %s. Using fallback.",
-                    resp.status_code,
-                    resp.text[:200],
-                )
-
-        except Exception as exc:
-            logger.warning("NVIDIA NIM explanation call failed: %s. Using local fallback.", exc)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        text, provider = await self._call_llm_api(messages)
+        if text:
+            if barcode:
+                self._cache[cache_key] = {
+                    "text": text,
+                    "provider": provider or "nvidia_nim_nemoguard",
+                    "is_fallback": False,
+                }
+            return text, provider or "nvidia_nim_nemoguard", False
 
         fallback_text = self._build_local_fallback_explanation(product_data)
         return fallback_text, "local_deterministic_explainer", True
@@ -291,52 +347,22 @@ class NvidiaNIMClient:
                 if turn.get("role") in ("user", "assistant") and turn.get("content"):
                     messages.append({"role": turn["role"], "content": turn["content"]})
 
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key.strip()}",
-                "Content-Type": "application/json",
-            }
-            payload = {
+        ans_text, provider = await self._call_llm_api(messages)
+        if ans_text:
+            topic_status = "DEFLECTED" if TOPIC_DEFLECTION_MESSAGE in ans_text else "ON_TOPIC"
+            result = {
+                "barcode": barcode,
+                "question": clean_q,
+                "answer": ans_text,
+                "provider": provider or "nvidia_nim_nemoguard",
                 "model": self.model_name,
-                "messages": messages,
-                "temperature": self.temperature,
-                "max_tokens": self.max_tokens,
+                "is_fallback": False,
+                "topic_status": topic_status,
+                "disclaimer": STATUTORY_DISCLAIMER,
             }
-
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    choices = data.get("choices", [])
-                    if choices and "message" in choices[0]:
-                        ans_text = choices[0]["message"]["content"].strip()
-                        topic_status = "DEFLECTED" if TOPIC_DEFLECTION_MESSAGE in ans_text else "ON_TOPIC"
-                        result = {
-                            "barcode": barcode,
-                            "question": clean_q,
-                            "answer": ans_text,
-                            "provider": "nvidia_nim_nemoguard",
-                            "model": self.model_name,
-                            "is_fallback": False,
-                            "topic_status": topic_status,
-                            "disclaimer": STATUTORY_DISCLAIMER,
-                        }
-                        if barcode:
-                            self._cache[cache_key] = result
-                        return result
-
-                logger.warning(
-                    "NVIDIA NIM Q&A returned HTTP %s: %s. Using deterministic fallback.",
-                    resp.status_code,
-                    resp.text[:200],
-                )
-
-        except Exception as exc:
-            logger.warning("NVIDIA NIM Q&A call failed: %s. Using offline fallback.", exc)
+            if barcode:
+                self._cache[cache_key] = result
+            return result
 
         ans = self._answer_from_factsheet_offline(product_data, clean_q)
         return {

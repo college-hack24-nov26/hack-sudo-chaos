@@ -262,7 +262,7 @@ class _ProductPickerModalState extends ConsumerState<ProductPickerModal>
                 ),
                 child: Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 48.0,
                       height: 48.0,
                       child: ProductPacketImage(

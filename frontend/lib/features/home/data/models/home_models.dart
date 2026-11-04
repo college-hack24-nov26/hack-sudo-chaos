@@ -54,6 +54,19 @@ class ScanHistoryItem {
       keyFindingSeverity: json['key_finding_severity']?.toString() ?? 'MODERATE',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'barcode': barcode,
+      'product_name': productName,
+      'brand_name': brandName,
+      'food_category': foodCategory,
+      'image_url': imageUrl,
+      'scanned_at': scannedAt.toIso8601String(),
+      'key_finding': keyFinding,
+      'key_finding_severity': keyFindingSeverity,
+    };
+  }
 }
 
 /// Represents an aggregated nutritional insight derived from scan records

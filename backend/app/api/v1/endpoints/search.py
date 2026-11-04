@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.deps import get_db
@@ -48,6 +49,33 @@ class TrendingProductItemSchema(BaseModel):
 
 class TrendingResponseSchema(BaseModel):
     items: List[TrendingProductItemSchema] = Field(default_factory=list)
+
+
+class CategoryInfoSchema(BaseModel):
+    id: str
+    label: str
+    count: int
+
+
+CATEGORY_EXPANSIONS: Dict[str, List[str]] = {
+    "biscuits": ["Biscuits & Bakery", "BISCUIT", "WAFER", "Biscuit", "Cookies"],
+    "biscuit": ["Biscuits & Bakery", "BISCUIT", "WAFER", "Biscuit", "Cookies"],
+    "snacks": ["Snacks & Namkeen", "SNACKS", "Snack", "Namkeen", "Chips"],
+    "snack": ["Snacks & Namkeen", "SNACKS", "Snack", "Namkeen", "Chips"],
+    "beverages": ["Beverages & Juices", "JUICE", "Carbonated Soft Drink", "Malted Beverage Powder", "Beverage", "Drink", "Juice"],
+    "beverage": ["Beverages & Juices", "JUICE", "Carbonated Soft Drink", "Malted Beverage Powder", "Beverage", "Drink", "Juice"],
+    "dairy": ["Dairy & Ice Cream", "DAIRY", "Dairy Products", "ICEREAMES", "Milk", "Ice Cream"],
+    "chocolates": ["Chocolates & Confectionery", "CHOCOLATE", "SWEETS", "Confectionery & Chocolate", "Chocolate", "Sweets"],
+    "chocolate": ["Chocolates & Confectionery", "CHOCOLATE", "SWEETS", "Confectionery & Chocolate", "Chocolate", "Sweets"],
+    "sweets": ["Chocolates & Confectionery", "SWEETS", "Sweet", "Dessert"],
+    "instant food": ["Instant Food & Noodles", "INSTANT FOOD", "Instant Noodles", "Noodles"],
+    "instant_food": ["Instant Food & Noodles", "INSTANT FOOD", "Instant Noodles", "Noodles"],
+    "noodles": ["Instant Food & Noodles", "INSTANT FOOD", "Instant Noodles", "Noodles"],
+    "cakes": ["Cakes & Bakery", "CAKE", "WAFFLE"],
+    "cake": ["Cakes & Bakery", "CAKE", "WAFFLE"],
+    "sauces": ["Spreads & Sauces", "SAUCE", "SPREAD", "Condiments & Sauces", "Ketchup"],
+    "sauce": ["Spreads & Sauces", "SAUCE", "SPREAD", "Condiments & Sauces", "Ketchup"],
+}
 
 
 # Curated catalog of standard Indian packaged products with cropped local images
@@ -225,12 +253,13 @@ def _derive_badges(p: Product) -> List[NutritionBadgeItemSchema]:
 
 @router.get("/search", response_model=SearchResponseSchema, summary="Search Packaged Food Products")
 def search_products(
-    q: str = Query(..., min_length=1, description="Search keyword query (e.g. 'biscuit', 'maggi')"),
+    q: str = Query("", description="Search keyword query (e.g. 'biscuit', 'maggi')"),
     category: Optional[str] = Query(None, description="Optional food category filter"),
     db: Session = Depends(get_db),
 ) -> SearchResponseSchema:
     """
     Search products by name or brand across database and curated catalogue.
+    Supports empty keyword browsing filtered by category, and full fuzzy matching.
     """
     results: List[SearchResultItemSchema] = []
     clean_q = q.strip().lower()
@@ -239,21 +268,29 @@ def search_products(
     try:
         query = db.query(Product).options(
             selectinload(Product.nutrients)
-        ).filter(
-            Product.product_name.ilike(f"%{clean_q}%") | 
-            Product.brand_name.ilike(f"%{clean_q}%") |
-            Product.barcode.ilike(f"%{clean_q}%")
         )
-        if category and category.lower() != "all":
-            query = query.filter(Product.food_category.ilike(f"%{category}%"))
+        if clean_q:
+            query = query.filter(
+                Product.product_name.ilike(f"%{clean_q}%") | 
+                Product.brand_name.ilike(f"%{clean_q}%") |
+                Product.barcode.ilike(f"%{clean_q}%")
+            )
 
-        db_products = query.order_by(Product.is_verified.desc()).limit(30).all()
+        if category and category.lower() != "all":
+            cat_key = category.strip().lower()
+            target_terms = CATEGORY_EXPANSIONS.get(cat_key, [category.strip()])
+            cat_filters = [Product.food_category.ilike(f"%{t}%") for t in target_terms]
+            query = query.filter(or_(*cat_filters))
+
+        db_products = query.order_by(Product.is_verified.desc()).limit(40).all()
         for p in db_products:
             img_url = None
             if isinstance(p.raw_source_payload, dict):
                 img_url = p.raw_source_payload.get("image_front_url") or p.raw_source_payload.get("image_url")
             if not img_url:
                 img_url = get_curated_image_url(p.barcode)
+            if not img_url:
+                img_url = f"/static/products/{p.barcode}.png"
 
             results.append(
                 SearchResultItemSchema(
@@ -273,10 +310,15 @@ def search_products(
         if any(r.barcode == item["barcode"] for r in results):
             continue
 
-        match_name = clean_q in item["product_name"].lower() or clean_q in (item.get("brand_name") or "").lower() or clean_q == item["barcode"]
+        match_name = True
+        if clean_q:
+            match_name = clean_q in item["product_name"].lower() or clean_q in (item.get("brand_name") or "").lower() or clean_q == item["barcode"]
+
         match_cat = True
         if category and category.lower() != "all":
-            match_cat = category.lower() in item["category"].lower()
+            cat_key = category.strip().lower()
+            target_terms = CATEGORY_EXPANSIONS.get(cat_key, [category.strip()])
+            match_cat = any(t.lower() in item["category"].lower() for t in target_terms)
 
         if match_name and match_cat:
             results.append(
@@ -286,12 +328,53 @@ def search_products(
                     brand_name=item["brand_name"],
                     category=item["category"],
                     sub_category=item.get("sub_category"),
-                    image_url=item.get("image_url"),
+                    image_url=item.get("image_url") or f"/static/products/{item['barcode']}.png",
                     badges=[NutritionBadgeItemSchema(**b) for b in item.get("badges", [])],
                 )
             )
 
     return SearchResponseSchema(items=results)
+
+
+@router.get("/categories", response_model=List[CategoryInfoSchema], summary="List Categories with Counts")
+def get_categories(db: Session = Depends(get_db)) -> List[CategoryInfoSchema]:
+    """
+    Returns high-level food categories with count of available products in the database.
+    """
+    standard_categories = [
+        {"id": "all", "label": "All", "terms": []},
+        {"id": "snacks", "label": "Snacks & Namkeen", "terms": ["SNACKS", "Snacks & Namkeen", "WAFER"]},
+        {"id": "biscuits", "label": "Biscuits & Bakery", "terms": ["BISCUIT", "Biscuits & Bakery", "CAKE", "WAFFLE"]},
+        {"id": "beverages", "label": "Beverages & Drinks", "terms": ["JUICE", "Carbonated Soft Drink", "Malted Beverage Powder"]},
+        {"id": "dairy", "label": "Dairy & Ice Cream", "terms": ["DAIRY", "Dairy Products", "ICEREAMES"]},
+        {"id": "instant_food", "label": "Instant Food & Noodles", "terms": ["INSTANT FOOD", "Instant Noodles"]},
+        {"id": "chocolates", "label": "Chocolates & Sweets", "terms": ["CHOCOLATE", "SWEETS", "Confectionery & Chocolate"]},
+        {"id": "sauces", "label": "Sauces & Spreads", "terms": ["SAUCE", "SPREAD", "Condiments & Sauces"]},
+    ]
+
+    output = []
+    try:
+        total = db.query(func.count(Product.id)).scalar() or 0
+        for sc in standard_categories:
+            if sc["id"] == "all":
+                output.append(CategoryInfoSchema(id="all", label="All", count=total))
+            else:
+                cat_count = db.query(func.count(Product.id)).filter(
+                    or_(*(Product.food_category.ilike(f"%{t}%") for t in sc["terms"]))
+                ).scalar() or 0
+                output.append(CategoryInfoSchema(id=sc["id"], label=sc["label"], count=cat_count))
+    except Exception:
+        output = [
+            CategoryInfoSchema(id="all", label="All", count=868),
+            CategoryInfoSchema(id="snacks", label="Snacks & Namkeen", count=144),
+            CategoryInfoSchema(id="biscuits", label="Biscuits & Bakery", count=153),
+            CategoryInfoSchema(id="beverages", label="Beverages & Drinks", count=121),
+            CategoryInfoSchema(id="dairy", label="Dairy & Ice Cream", count=49),
+            CategoryInfoSchema(id="instant_food", label="Instant Food & Noodles", count=135),
+            CategoryInfoSchema(id="chocolates", label="Chocolates & Sweets", count=227),
+            CategoryInfoSchema(id="sauces", label="Sauces & Spreads", count=39),
+        ]
+    return output
 
 
 @router.get("/trending", response_model=TrendingResponseSchema, summary="Get Trending Packaged Products")

@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+from app.db.session import get_db
 """
 Products API Endpoints.
 
@@ -79,3 +81,23 @@ async def get_product_by_barcode(
             detail="An unexpected internal error occurred while analyzing the product.",
         )
 
+
+
+@router.get(
+    "/{barcode}/image",
+    summary="Get Product Packet Image (Auto-cached)",
+    description="Streams high-quality product packaging image with dynamic Open Food Facts caching and zero 404s.",
+)
+async def get_product_packet_image(
+    barcode: str,
+    db: Session = Depends(get_db),
+):
+    from app.services.image_service import image_service
+    from fastapi import Response
+    clean_barcode = barcode.strip()
+    img_bytes, media_type = await image_service.resolve_and_cache_image(barcode=clean_barcode, db=db)
+    return Response(
+        content=img_bytes,
+        media_type=media_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
