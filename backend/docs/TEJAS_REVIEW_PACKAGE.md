@@ -2,7 +2,7 @@
 
 **Prepared for:** Tejas (ProductMapper, ProductService, Database & API Integration Owner)  
 **Branch:** `develop`  
-**Current HEAD Commit:** `d0bbc9a85002398902c12c24d0a6a2f14581aa14`  
+**Current HEAD Commit:** `7d126f67acd518b72f4075aa3ccd52f2fc385228`  
 **Date:** 2026-11-04  
 **Status:** Working Tree Inspection & Proposed Corrections — Pending Tejas's Architectural Review  
 
@@ -13,7 +13,7 @@
 In response to our internal audit, this review package provides:
 1. Complete Git state and modified file inventory.
 2. Complete, untruncated diffs for all modified tracked files.
-3. Full source code of the 12 regression tests.
+3. Full source code of the 22 regression tests.
 4. Complete terminal output of the test runner with full test count reconciliation.
 5. In-depth investigation of barcode identity (`8901030383701` vs `8901063142015`).
 6. Proposed implementation corrections for measurement-unit compatibility, Decimal arithmetic, and data-quality classification.
@@ -27,7 +27,7 @@ In response to our internal audit, this review package provides:
 ## 2. Complete Git State
 
 - **Active Branch:** `develop` (Up to date with `origin/develop`)
-- **HEAD Commit:** `d0bbc9a85002398902c12c24d0a6a2f14581aa14`
+- **HEAD Commit:** `7d126f67acd518b72f4075aa3ccd52f2fc385228`
 - **Working Tree Status (`git status --short`):**
   ```text
    M backend/app/domain/curated_catalog.py
@@ -799,8 +799,8 @@ The full contents of `backend/tests/test_nutrition_data_integrity.py` are preser
 ### Current Test Execution Summary:
 - **Discovered Tests:** 125
 - **Class-Level Skipped Tests:** 11 (`TestProductRepository` skipped due to missing `TEST_DATABASE_URL` to isolate cloud Supabase database)
-- **Executed Tests:** 114
-  - **Passed:** 113
+- **Executed Tests:** 135
+  - **Passed:** 135
   - **Skipped:** 1 (`test_direct_connection_and_table_presence` in `test_migration_ownership.py`)
   - **Failed:** 0
   - **Errors:** 0

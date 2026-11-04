@@ -11,8 +11,13 @@ Verifies end-to-end data pipeline integrity across:
 7. Frontend adapter serialization and data quality grading
 """
 
+import os
+import sys
 import unittest
 from decimal import Decimal
+
+# Ensure backend root is on sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from typing import Dict, Any, List
 
 from app.domain.engines.contracts import (
@@ -348,7 +353,7 @@ class TestNutritionDataIntegrity(unittest.TestCase):
         self.assertEqual(issues, [], f"Nutri-Choice should have 0 consistency issues, got {issues}")
 
     def test_12_frontend_payload_adapter_serialization_and_quality(self):
-        """Scenario 12: Adapter properly builds payload with serving_size and data_quality."""
+        """Scenario 12: Adapter builds payload with demo data quality for demo fixture 8901030383701."""
         product = get_curated_product("8901030383701")
         sections = build_frontend_sections(
             domain_product=product,
@@ -361,7 +366,7 @@ class TestNutritionDataIntegrity(unittest.TestCase):
         interp = sections["nutritional_interpretation"]
         self.assertEqual(interp.serving_size_value, 25.0)
         self.assertEqual(interp.serving_size_unit, "g")
-        self.assertEqual(interp.data_quality, "VERIFIED")
+        self.assertEqual(interp.data_quality, "DEMO_DATA")
         self.assertEqual(interp.data_inconsistencies, [])
 
         # Confirm all 10 nutrients present in canonical order
@@ -374,6 +379,236 @@ class TestNutritionDataIntegrity(unittest.TestCase):
         self.assertEqual(carbs_item.value_per_serving, 17.0)
         self.assertEqual(carbs_item.unit, "g")
         self.assertEqual(carbs_item.status, "PRESENT")
+
+    def test_13_verified_commercial_barcode_classified_as_verified(self):
+        """Scenario 13: Authentic commercial barcode 8901063142015 is classified as VERIFIED."""
+        product = get_curated_product("8901063142015")
+        self.assertIsNotNone(product, "Commercial pack 8901063142015 must exist in catalog")
+        self.assertEqual(product.data_source_id, "verified_packaging")
+
+        sections = build_frontend_sections(
+            domain_product=product,
+            nutrition_eval=None,
+            icmr_eval=None,
+            claims_eval=None,
+            ingredient_eval=None,
+        )
+        interp = sections["nutritional_interpretation"]
+        self.assertEqual(interp.data_quality, "VERIFIED")
+        self.assertEqual(interp.data_inconsistencies, [])
+
+    def test_14_per_100ml_with_valid_volume_serving_conversion(self):
+        """Scenario 14: Liquid product (PER_100ML) with 200 ml serving computes serving values."""
+        obs = NutrientObservationInput(
+            nutrient_code="total_sugars",
+            per_100g_value=Decimal("13.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100ML,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        liquid_product = ProductEvaluationInput(
+            product_id="test_juice",
+            product_name="Fruit Juice",
+            food_form=FoodForm.LIQUID,
+            serving_size_value=Decimal("200.0"),
+            serving_size_unit="ml",
+            data_source_id="verified_packaging",
+            nutrients={
+                "energy": NutrientObservationInput(nutrient_code="energy", per_100g_value=Decimal("56.0"), unit="kcal", measurement_basis=MeasurementBasis.PER_100ML, data_status=NutrientDataStatus.PRESENT),
+                "protein": NutrientObservationInput(nutrient_code="protein", per_100g_value=Decimal("0.4"), unit="g", measurement_basis=MeasurementBasis.PER_100ML, data_status=NutrientDataStatus.PRESENT),
+                "carbohydrates": NutrientObservationInput(nutrient_code="carbohydrates", per_100g_value=Decimal("13.5"), unit="g", measurement_basis=MeasurementBasis.PER_100ML, data_status=NutrientDataStatus.PRESENT),
+                "total_sugars": obs,
+                "total_fat": NutrientObservationInput(nutrient_code="total_fat", per_100g_value=Decimal("0.0"), unit="g", measurement_basis=MeasurementBasis.PER_100ML, data_status=NutrientDataStatus.EXPLICITLY_ZERO),
+                "sodium": NutrientObservationInput(nutrient_code="sodium", per_100g_value=Decimal("10.0"), unit="mg", measurement_basis=MeasurementBasis.PER_100ML, data_status=NutrientDataStatus.PRESENT),
+            },
+        )
+        sections = build_frontend_sections(domain_product=liquid_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        sugars_item = next(n for n in sections["nutritional_interpretation"].nutrients if n.nutrient_code == "total_sugars")
+        # 13.0g / 100ml * 200ml = 26.0g
+        self.assertEqual(sugars_item.value_per_serving, 26.0)
+
+    def test_15_per_100ml_with_incompatible_mass_serving_rejected(self):
+        """Scenario 15: PER_100ML basis with incompatible mass serving (e.g. 25 g) rejects conversion."""
+        obs = NutrientObservationInput(
+            nutrient_code="total_sugars",
+            per_100g_value=Decimal("13.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100ML,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        mismatched_product = ProductEvaluationInput(
+            product_id="test_mismatch_liquid",
+            product_name="Liquid with Gram Serving",
+            food_form=FoodForm.LIQUID,
+            serving_size_value=Decimal("25.0"),
+            serving_size_unit="g",  # Mismatch: liquid reference basis requires ml serving
+            data_source_id="verified_packaging",
+            nutrients={"total_sugars": obs},
+        )
+        sections = build_frontend_sections(domain_product=mismatched_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        sugars_item = sections["nutritional_interpretation"].nutrients[0]
+        self.assertIsNone(sugars_item.value_per_serving, "Must reject conversion when volume basis has mass serving")
+
+    def test_16_per_100g_with_valid_mass_serving_conversion(self):
+        """Scenario 16: Solid product (PER_100G) with 25 g serving computes serving values."""
+        obs = NutrientObservationInput(
+            nutrient_code="protein",
+            per_100g_value=Decimal("8.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100G,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        solid_product = ProductEvaluationInput(
+            product_id="test_solid",
+            product_name="Solid Biscuit",
+            food_form=FoodForm.SOLID,
+            serving_size_value=Decimal("25.0"),
+            serving_size_unit="g",
+            data_source_id="verified_packaging",
+            nutrients={"protein": obs},
+        )
+        sections = build_frontend_sections(domain_product=solid_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        prot_item = sections["nutritional_interpretation"].nutrients[0]
+        # 8.0g / 100g * 25g = 2.0g
+        self.assertEqual(prot_item.value_per_serving, 2.0)
+
+    def test_17_per_100g_with_incompatible_volume_serving_rejected(self):
+        """Scenario 17: PER_100G basis with incompatible volume serving (e.g. 25 ml) rejects conversion."""
+        obs = NutrientObservationInput(
+            nutrient_code="protein",
+            per_100g_value=Decimal("8.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100G,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        mismatched_product = ProductEvaluationInput(
+            product_id="test_mismatch_solid",
+            product_name="Solid with ML Serving",
+            food_form=FoodForm.SOLID,
+            serving_size_value=Decimal("25.0"),
+            serving_size_unit="ml",  # Mismatch: solid reference basis requires g serving
+            data_source_id="verified_packaging",
+            nutrients={"protein": obs},
+        )
+        sections = build_frontend_sections(domain_product=mismatched_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        prot_item = sections["nutritional_interpretation"].nutrients[0]
+        self.assertIsNone(prot_item.value_per_serving, "Must reject conversion when mass basis has volume serving")
+
+    def test_18_unknown_serving_unit_rejected(self):
+        """Scenario 18: Serving size declared in count units (e.g. 'pieces') rejects conversion."""
+        obs = NutrientObservationInput(
+            nutrient_code="protein",
+            per_100g_value=Decimal("8.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100G,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        unitless_product = ProductEvaluationInput(
+            product_id="test_pieces",
+            product_name="Cookies by Piece",
+            food_form=FoodForm.SOLID,
+            serving_size_value=Decimal("2.0"),
+            serving_size_unit="pieces",  # Non-metric piece count cannot be converted without weight
+            data_source_id="verified_packaging",
+            nutrients={"protein": obs},
+        )
+        sections = build_frontend_sections(domain_product=unitless_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        prot_item = sections["nutritional_interpretation"].nutrients[0]
+        self.assertIsNone(prot_item.value_per_serving, "Must reject conversion when serving unit is piece count")
+
+    def test_19_missing_serving_unit_rejected(self):
+        """Scenario 19: Missing serving unit (None) prevents silent conversion."""
+        obs = NutrientObservationInput(
+            nutrient_code="protein",
+            per_100g_value=Decimal("8.0"),
+            per_serving_value=None,
+            unit="g",
+            measurement_basis=MeasurementBasis.PER_100G,
+            data_status=NutrientDataStatus.PRESENT,
+        )
+        no_unit_product = ProductEvaluationInput(
+            product_id="test_no_unit",
+            product_name="Product with Missing Unit",
+            food_form=FoodForm.SOLID,
+            serving_size_value=Decimal("25.0"),
+            serving_size_unit=None,  # Missing unit
+            data_source_id="verified_packaging",
+            nutrients={"protein": obs},
+        )
+        sections = build_frontend_sections(domain_product=no_unit_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        prot_item = sections["nutritional_interpretation"].nutrients[0]
+        self.assertIsNone(prot_item.value_per_serving, "Must reject conversion when serving unit is None")
+
+    def test_20_unknown_external_source_never_defaults_to_verified(self):
+        """Scenario 20: Unknown third-party source defaults to UNVERIFIED_EXTERNAL, never VERIFIED."""
+        dummy_product = ProductEvaluationInput(
+            product_id="test_unknown_source",
+            product_name="Crowdsourced Granola",
+            food_form=FoodForm.SOLID,
+            serving_size_value=Decimal("40.0"),
+            serving_size_unit="g",
+            data_source_id="ad_hoc_source",  # Unknown source
+            nutrients={
+                "energy": NutrientObservationInput(nutrient_code="energy", per_100g_value=Decimal("400.0"), unit="kcal", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+                "protein": NutrientObservationInput(nutrient_code="protein", per_100g_value=Decimal("10.0"), unit="g", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+                "carbohydrates": NutrientObservationInput(nutrient_code="carbohydrates", per_100g_value=Decimal("60.0"), unit="g", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+                "total_sugars": NutrientObservationInput(nutrient_code="total_sugars", per_100g_value=Decimal("15.0"), unit="g", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+                "total_fat": NutrientObservationInput(nutrient_code="total_fat", per_100g_value=Decimal("12.0"), unit="g", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+                "sodium": NutrientObservationInput(nutrient_code="sodium", per_100g_value=Decimal("200.0"), unit="mg", measurement_basis=MeasurementBasis.PER_100G, data_status=NutrientDataStatus.PRESENT),
+            },
+        )
+        sections = build_frontend_sections(domain_product=dummy_product, nutrition_eval=None, icmr_eval=None, claims_eval=None, ingredient_eval=None)
+        self.assertEqual(sections["nutritional_interpretation"].data_quality, "UNVERIFIED_EXTERNAL")
+        self.assertNotEqual(sections["nutritional_interpretation"].data_quality, "VERIFIED")
+
+    def test_21_negative_quantity_in_serving_detected(self):
+        """Scenario 21: Negative per-serving quantity is detected as an inconsistency."""
+        inconsistent_nutrients = {
+            "protein": NutrientObservationInput(
+                nutrient_code="protein",
+                per_100g_value=Decimal("8.0"),
+                per_serving_value=Decimal("-2.0"),  # Negative per-serving quantity
+                unit="g",
+                measurement_basis=MeasurementBasis.PER_100G,
+                data_status=NutrientDataStatus.PRESENT,
+            ),
+        }
+        issues = validate_nutrient_consistency(inconsistent_nutrients)
+        self.assertTrue(
+            any("per-serving quantity cannot be negative" in issue for issue in issues),
+            f"Expected negative per-serving inconsistency, got: {issues}",
+        )
+
+    def test_22_trans_fat_exceeding_total_fat_per_serving_detected(self):
+        """Scenario 22: Trans fat > total fat per serving is detected as an inconsistency."""
+        inconsistent_nutrients = {
+            "total_fat": NutrientObservationInput(
+                nutrient_code="total_fat",
+                per_100g_value=Decimal("5.0"),
+                per_serving_value=Decimal("1.0"),
+                unit="g",
+                measurement_basis=MeasurementBasis.PER_100G,
+                data_status=NutrientDataStatus.PRESENT,
+            ),
+            "trans_fat": NutrientObservationInput(
+                nutrient_code="trans_fat",
+                per_100g_value=Decimal("0.5"),
+                per_serving_value=Decimal("2.0"),  # Trans fat serving (2.0g) > total fat serving (1.0g)
+                unit="g",
+                measurement_basis=MeasurementBasis.PER_100G,
+                data_status=NutrientDataStatus.PRESENT,
+            ),
+        }
+        issues = validate_nutrient_consistency(inconsistent_nutrients)
+        self.assertTrue(
+            any("Trans fat (2.0g) exceeds total fat (1.0g) per serving" in issue for issue in issues),
+            f"Expected per-serving trans fat violation, got: {issues}",
+        )
 
 
 if __name__ == "__main__":

@@ -125,7 +125,7 @@ class ProductEvaluationInput(BaseModel):
     food_category: Optional[str] = Field(None, description="Food category (e.g. 'BEVERAGE', 'CEREAL')")
     package_size: Optional[str] = Field(None, description="Package declaration (e.g. '200g', '1L')")
     serving_size_value: Optional[Decimal] = Field(None, description="Serving size numeric value")
-    serving_size_unit: str = Field("g", description="Serving unit (e.g. 'g', 'ml')")
+    serving_size_unit: Optional[str] = Field(None, description="Serving unit (e.g. 'g', 'ml')")
     
     nutrients: Dict[str, NutrientObservationInput] = Field(
         default_factory=dict,

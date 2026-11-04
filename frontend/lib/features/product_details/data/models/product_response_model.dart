@@ -515,10 +515,6 @@ class AiExplanation {
     );
   }
 }
-<<<<<<< Updated upstream
-
-
-
 class ProductDataFieldStatus {
   final String label;
   final bool isAvailable;
@@ -528,5 +524,3 @@ class ProductDataFieldStatus {
     required this.isAvailable,
   });
 }
-=======
->>>>>>> Stashed changes

@@ -173,7 +173,7 @@ class CoordinatorEvaluationResult(BaseModel):
     food_category: Optional[str] = Field(None, description="Food category (e.g. 'BEVERAGE', 'CEREAL')")
     package_size: Optional[str] = Field(None, description="Package declaration")
     serving_size_value: Optional[Decimal] = Field(None, description="Serving size value")
-    serving_size_unit: str = Field("g", description="Serving size unit")
+    serving_size_unit: Optional[str] = Field(None, description="Serving size unit")
     data_source_id: Optional[str] = Field(None, description="Provenance source ID")
     evaluated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

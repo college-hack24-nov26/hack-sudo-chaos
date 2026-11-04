@@ -224,7 +224,6 @@ class ProductMapper:
             is_unit_valid=is_unit_valid,
         )
 
-<<<<<<< Updated upstream
         dec_100 = pn.per_100g_value
         dec_serving = pn.per_serving_value
         if (
@@ -234,7 +233,7 @@ class ProductMapper:
             and serving_size_value > Decimal("0")
             and basis in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML)
         ):
-            dec_serving = Decimal(str(round(float(dec_100) * float(serving_size_value) / 100.0, 2)))
+            dec_serving = ((dec_100 * serving_size_value) / Decimal("100")).quantize(Decimal("0.01"))
         elif (
             dec_100 is None
             and dec_serving is not None
@@ -242,29 +241,15 @@ class ProductMapper:
             and serving_size_value > Decimal("0")
             and basis == MeasurementBasis.PER_SERVING
         ):
-            dec_100 = Decimal(str(round(float(dec_serving) * 100.0 / float(serving_size_value), 2)))
+            dec_100 = ((dec_serving * Decimal("100")) / serving_size_value).quantize(Decimal("0.01"))
+        elif basis is None:
+            dec_100 = None
+            dec_serving = None
 
         return NutrientObservationInput(
             nutrient_code=pn.nutrient_code,
             per_100g_value=dec_100,
             per_serving_value=dec_serving,
-=======
-        per_100g = pn.per_100g_value
-        per_serving = pn.per_serving_value
-
-        # Critical Guard: PER_SERVING values do not become per-100g values
-        if basis == MeasurementBasis.PER_SERVING:
-            per_100g = None
-        elif basis is None:
-            # Unresolved basis cannot be safely attributed to 100g or serving
-            per_100g = None
-            per_serving = None
-
-        return NutrientObservationInput(
-            nutrient_code=pn.nutrient_code,
-            per_100g_value=per_100g,
-            per_serving_value=per_serving,
->>>>>>> Stashed changes
             unit=unit,
             data_status=data_status,
             measurement_basis=basis,

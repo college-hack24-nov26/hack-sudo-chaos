@@ -174,6 +174,14 @@ def validate_nutrient_consistency(
             inconsistencies.append(
                 f"Added sugars ({float(added.per_100g_value):.1f}g) exceeds total sugars ({float(total_s.per_100g_value):.1f}g) per 100g."
             )
+        if (
+            added.per_serving_value is not None
+            and total_s.per_serving_value is not None
+            and added.per_serving_value > total_s.per_serving_value
+        ):
+            inconsistencies.append(
+                f"Added sugars ({float(added.per_serving_value):.1f}g) exceeds total sugars ({float(total_s.per_serving_value):.1f}g) per serving."
+            )
 
     # 3. Saturated fat <= Total fat
     sat = nutrients.get("saturated_fat")
@@ -187,6 +195,14 @@ def validate_nutrient_consistency(
             inconsistencies.append(
                 f"Saturated fat ({float(sat.per_100g_value):.1f}g) exceeds total fat ({float(tot_f.per_100g_value):.1f}g) per 100g."
             )
+        if (
+            sat.per_serving_value is not None
+            and tot_f.per_serving_value is not None
+            and sat.per_serving_value > tot_f.per_serving_value
+        ):
+            inconsistencies.append(
+                f"Saturated fat ({float(sat.per_serving_value):.1f}g) exceeds total fat ({float(tot_f.per_serving_value):.1f}g) per serving."
+            )
 
     # 4. Trans fat <= Total fat
     trans = nutrients.get("trans_fat")
@@ -198,6 +214,14 @@ def validate_nutrient_consistency(
         ):
             inconsistencies.append(
                 f"Trans fat ({float(trans.per_100g_value):.1f}g) exceeds total fat ({float(tot_f.per_100g_value):.1f}g) per 100g."
+            )
+        if (
+            trans.per_serving_value is not None
+            and tot_f.per_serving_value is not None
+            and trans.per_serving_value > tot_f.per_serving_value
+        ):
+            inconsistencies.append(
+                f"Trans fat ({float(trans.per_serving_value):.1f}g) exceeds total fat ({float(tot_f.per_serving_value):.1f}g) per serving."
             )
 
     # 5. Energy plausibility against macronutrients
@@ -271,31 +295,47 @@ def build_frontend_sections(
                     if k in r.rule_id or k in r.rule_code.lower():
                         icmr_breaches[k] = True
 
-    # 1. Run consistency validation & determine data quality
+    # 1. Run consistency validation & determine conservative data quality
     inconsistencies = validate_nutrient_consistency(domain_product.nutrients)
 
-    data_quality = "VERIFIED"
+    # Check for incomplete mandatory statutory nutrient declarations (FSSAI 2020)
+    mandatory_statutory_slugs = [
+        "energy",
+        "protein",
+        "carbohydrates",
+        "total_sugars",
+        "total_fat",
+        "sodium",
+    ]
+    is_incomplete = any(
+        (slug not in domain_product.nutrients)
+        or (domain_product.nutrients[slug].data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN))
+        for slug in mandatory_statutory_slugs
+    )
+
+    source_id = str(domain_product.data_source_id or "").strip().lower()
+
     if inconsistencies:
         data_quality = "INCONSISTENT"
-    elif domain_product.data_source_id in ("open_food_facts", "unverified_external"):
-        data_quality = "UNVERIFIED_EXTERNAL"
-    elif domain_product.data_source_id in ("on_device_ocr", "ocr_extracted"):
-        data_quality = "OCR_EXTRACTED"
-    elif any(
-        obs.data_status in (NutrientDataStatus.NOT_DECLARED, NutrientDataStatus.UNKNOWN)
-        for obs in domain_product.nutrients.values()
-    ):
+    elif is_incomplete:
         data_quality = "INCOMPLETE"
+    elif source_id in ("on_device_ocr", "ocr_extracted"):
+        data_quality = "OCR_EXTRACTED"
+    elif source_id in ("curated_demo_catalog", "demo_data"):
+        data_quality = "DEMO_DATA"
+    elif source_id in ("curated_catalog", "verified_packaging", "verified_local_db"):
+        data_quality = "VERIFIED"
+    else:
+        # Unknown, unverified, or third-party crowdsourced source defaults to UNVERIFIED_EXTERNAL (never VERIFIED)
+        data_quality = "UNVERIFIED_EXTERNAL"
 
-    has_verified_serving = (
-        domain_product.serving_size_value is not None
-        and domain_product.serving_size_value > Decimal("0")
-    )
-    serving_factor = (
-        float(domain_product.serving_size_value) / 100.0
-        if has_verified_serving
-        else None
-    )
+    # Strict dimensional unit sets for serving conversion
+    MASS_UNITS = {"g", "gram", "grams", "gm", "gms"}
+    VOLUME_UNITS = {"ml", "milliliter", "milliliters", "millilitre", "millilitres"}
+
+    serv_val = domain_product.serving_size_value
+    serv_unit = (domain_product.serving_size_unit or "").strip().lower()
+    has_valid_serving = serv_val is not None and serv_val > Decimal("0") and bool(serv_unit)
 
     # Sort nutrients canonically
     sorted_slugs: List[str] = [s for s in CANONICAL_NUTRIENT_ORDER if s in domain_product.nutrients]
@@ -309,39 +349,39 @@ def build_frontend_sections(
         val_100 = float(obs.per_100g_value) if obs.per_100g_value is not None else None
         val_serving = float(obs.per_serving_value) if obs.per_serving_value is not None else None
 
-        # Explicit per-serving conversion with verified serving weight
-        if val_serving is None and val_100 is not None and domain_product.serving_size_value:
-            try:
-                serving_weight = float(domain_product.serving_size_value)
-                if serving_weight > 0:
-                    val_serving = round((val_100 * serving_weight) / 100.0, 2)
-            except (ValueError, TypeError):
-                pass
-        elif val_100 is None and val_serving is not None and domain_product.serving_size_value:
-            try:
-                serving_weight = float(domain_product.serving_size_value)
-                if serving_weight > 0:
-                    val_100 = round((val_serving * 100.0) / serving_weight, 2)
-            except (ValueError, TypeError):
-                pass
+        # Bi-directional serving conversion strictly enforcing dimensional compatibility & Decimal arithmetic:
+        if has_valid_serving and obs.measurement_basis is not None:
+            # Case 1: PER_100G -> PER_SERVING (Requires mass unit, e.g. 'g')
+            if (
+                obs.measurement_basis == MeasurementBasis.PER_100G
+                and serv_unit in MASS_UNITS
+                and val_serving is None
+                and obs.per_100g_value is not None
+            ):
+                dec_serving = ((obs.per_100g_value * serv_val) / Decimal("100")).quantize(Decimal("0.01"))
+                val_serving = float(dec_serving)
+
+            # Case 2: PER_100ML -> PER_SERVING (Requires volume unit, e.g. 'ml')
+            elif (
+                obs.measurement_basis == MeasurementBasis.PER_100ML
+                and serv_unit in VOLUME_UNITS
+                and val_serving is None
+                and obs.per_100g_value is not None
+            ):
+                dec_serving = ((obs.per_100g_value * serv_val) / Decimal("100")).quantize(Decimal("0.01"))
+                val_serving = float(dec_serving)
+
+            # Case 3: PER_SERVING -> Reference quantity (PER_100G if mass, PER_100ML if volume)
+            elif (
+                obs.measurement_basis == MeasurementBasis.PER_SERVING
+                and val_100 is None
+                and obs.per_serving_value is not None
+            ):
+                if serv_unit in MASS_UNITS or serv_unit in VOLUME_UNITS:
+                    dec_100 = ((obs.per_serving_value * Decimal("100")) / serv_val).quantize(Decimal("0.01"))
+                    val_100 = float(dec_100)
 
         rda_pct = rdi_percentages.get(slug)
-
-        # Automatic bi-directional serving conversion when verified serving size is available:
-        if (
-            val_serving is None
-            and val_100 is not None
-            and has_verified_serving
-            and obs.measurement_basis in (MeasurementBasis.PER_100G, MeasurementBasis.PER_100ML)
-        ):
-            val_serving = round(val_100 * serving_factor, 2)
-        elif (
-            val_100 is None
-            and val_serving is not None
-            and has_verified_serving
-            and obs.measurement_basis == MeasurementBasis.PER_SERVING
-        ):
-            val_100 = round(val_serving * (100.0 / float(domain_product.serving_size_value)), 2)
 
         # Classification and concern level
         classification = "Moderate"
