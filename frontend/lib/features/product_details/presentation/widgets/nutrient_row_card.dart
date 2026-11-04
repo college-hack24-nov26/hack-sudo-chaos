@@ -189,17 +189,27 @@ class NutrientRowCard extends StatelessWidget {
                   ),
                 ],
 
-                // Explanation text
-                if (nutrient.explanation != null && nutrient.explanation!.isNotEmpty) ...[
-                  const SizedBox(height: 8.0),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 48.0),
-                    child: Text(
-                      nutrient.explanation!,
-                      style: AppTypography.bodySmall,
-                    ),
-                  ),
-                ],
+                // Row 3: Plain-language Nutritional Impact Explanation (Visible without expanding)
+                Builder(
+                  builder: (context) {
+                    final explanation = nutrient.getNutritionalImpactExplanation(nutrient.classification);
+                    if (explanation.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 48.0, top: 6.0, right: 4.0),
+                      child: Text(
+                        explanation,
+                        style: TextStyle(
+                          fontFamily: 'Manrope',
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black87.withValues(alpha: 0.65),
+                          height: 1.35,
+                        ),
+                        softWrap: true,
+                      ),
+                    );
+                  },
+                ),
 
                 // Expanded Section: RDA & Clinical reference values
                 if (isExpanded) ...[

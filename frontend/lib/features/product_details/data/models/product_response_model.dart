@@ -334,6 +334,80 @@ class NutrientItem {
   bool get hasThresholdScale =>
       lowThresholdMax != null && moderateThresholdMax != null && highThresholdMin != null;
 
+  String getNutritionalImpactExplanation([String? resolvedClassification]) {
+    final effClass = (resolvedClassification ?? classification ?? '').trim().toLowerCase();
+    final isHigh = effClass == 'high' || effClass == 'concern' || effClass == 'fail' || effClass == 'non_compliant';
+
+    final code = nutrientCode.toLowerCase();
+    final name = displayName.toLowerCase();
+
+    if (code.contains('added_sugar') || name.contains('added sugar')) {
+      if (isHigh) {
+        return 'High added sugar content. Regular excess intake can increase the risk of surplus calorie accumulation.';
+      }
+      return 'Contains minimal or no added sugars.';
+    }
+
+    if (code.contains('sugar') || name.contains('sugar')) {
+      if (isHigh) {
+        return 'High sugar content. Frequent excessive intake can contribute to tooth decay and increased energy intake.';
+      }
+      return 'Provides sweetness. Intake within recommended limits supports balanced nutrition.';
+    }
+
+    if (code.contains('trans_fat') || name.contains('trans fat')) {
+      if (isHigh) {
+        return 'Trans fat is best avoided as it can raise LDL cholesterol and cardiovascular risk.';
+      }
+      return 'Negligible or zero trans fat, which aligns with heart-healthy standards.';
+    }
+
+    if ((code.contains('sat') && (code.contains('fat') || name.contains('fat'))) ||
+        name.contains('saturated fat')) {
+      if (isHigh) {
+        return 'High saturated fat content. Excessive consumption over time can contribute to higher LDL cholesterol.';
+      }
+      return 'Fat content within standard dietary bounds.';
+    }
+
+    if (code.contains('fat') || name.contains('fat')) {
+      if (isHigh) {
+        return 'High saturated fat content. Excessive consumption over time can contribute to higher LDL cholesterol.';
+      }
+      return 'Fat content within standard dietary bounds.';
+    }
+
+    if (code.contains('sodium') || name.contains('sodium') || code.contains('salt') || name.contains('salt')) {
+      if (isHigh) {
+        return 'High sodium content. Excessive sodium intake can contribute to elevated blood pressure.';
+      }
+      return 'Sodium level within moderate consumption limits.';
+    }
+
+    if (code.contains('protein') || name.contains('protein')) {
+      return 'Provides protein, which supports muscle maintenance and cellular function.';
+    }
+
+    if (code.contains('fibre') || name.contains('fibre') || code.contains('fiber') || name.contains('fiber')) {
+      return 'Supports gut health, smooth digestion, and sustained energy release.';
+    }
+
+    if (code.contains('carb') || name.contains('carb') ||
+        code.contains('energy') || name.contains('energy') ||
+        code.contains('calorie') || name.contains('calorie')) {
+      return 'Provides core energy for daily metabolic activities.';
+    }
+
+    if (explanation != null && explanation!.trim().isNotEmpty) {
+      final exp = explanation!.trim();
+      if (!exp.endsWith('content per 100 g.') && !exp.endsWith('content per serving.')) {
+        return exp;
+      }
+    }
+
+    return '$displayName contribution within standard daily dietary intake.';
+  }
+
   factory NutrientItem.fromJson(Map<String, dynamic> json) {
     return NutrientItem(
       nutrientCode: json['nutrient_code']?.toString() ?? '',
